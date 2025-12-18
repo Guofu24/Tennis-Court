@@ -1,0 +1,11 @@
+{% extends 'apps/master.html' %} {% block balance %}
+<div class="container mt-5">
+    <h2>Insufficient Balance</h2>
+    <p>Your current balance is insufficient to complete this booking. Please choose one of the following options:</p>
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" name="cancel" class="btn btn-secondary">Cancel</button>
+        <button type="submit" name="top_up" class="btn btn-primary">Top Up</button>
+    </form>
+</div>
+{% endblock %}

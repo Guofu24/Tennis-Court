@@ -1,0 +1,44 @@
+{% extends "apps/master.html" %} {% load static %} {% load custom_filters %} {% block report %}
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title" style="text-align: center;">Report an Issue for {{ court.name }}</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Court Status -->
+                <div class="mb-4">
+                    <label for="id_court_status" class="form-label"><strong>Court Status:</strong></label> {{ form.court_status|add_class:"form-select" }}
+                </div>
+
+                <!-- Quantity of Balls -->
+                <div class="mb-4">
+                    <label for="id_quantity_of_balls" class="form-label"><strong>Quantity of Balls:</strong></label> {{ form.quantity_of_balls|add_class:"form-control" }}
+                </div>
+
+                <!-- Quality of Court -->
+                <div class="mb-4">
+                    <label for="id_quality_of_court" class="form-label"><strong>Quality of Court:</strong></label> {{ form.quality_of_court|add_class:"form-control" }}
+                </div>
+
+                <!-- Additional Info -->
+                <div class="mb-4">
+                    <label for="id_additional_info" class="form-label"><strong>Additional Information:</strong></label> {{ form.additional_info|add_class:"form-control" }}
+                </div>
+
+                <!-- Upload Image -->
+                <div class="mb-4">
+                    <label for="id_image" class="form-label"><strong>Upload Image (optional):</strong></label> {{ form.image|add_class:"form-control" }}
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

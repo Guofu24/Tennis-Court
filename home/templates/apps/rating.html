@@ -1,0 +1,44 @@
+{% extends 'apps/master.html' %} {% load static %}
+{% block rating %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+            <h1 class="mb-4 text-center">{{ tennis_court.name }}</h1>
+            <p>There are all the reviews from our clients for this court.</p>
+        </div>
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Court Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Court Name:</strong> {{ tennis_court.name }}</p>
+                <p><strong>Address:</strong> {{ tennis_court.court_address }}</p>
+                <p><strong>Average Rating:</strong> 
+                    <span class="badge bg-warning text-dark">{{ tennis_court.average_rating|floatformat:1 }} / 5.0</span>
+                </p>
+            </div>
+        </div>
+        {% if tennis_court.reviews.all %}
+        <div class="owl-carousel testimonial-carousel wow fadeInUp" style="height:250px" data-wow-delay="0.1s">
+            {% for review in tennis_court.reviews.all %}
+            <div class="testimonial-item bg-light rounded p-3" style="height:100%">
+                <div class="bg-white border rounded p-4" style="height:100%">
+                    <p>{{ review.comment }}</p>
+                    <div class="d-flex align-items-center">
+                        <img class="img-fluid flex-shrink-0 rounded" src="{% static 'app/img/testimonial-1.jpg' %}" style="width: 45px; height: 45px;">
+                        <div class="ps-3">
+                            <h6 class="fw-bold mb-1">{{ review.user.username }} </h6>
+                            <span class="badge bg-success">{{ review.rating }} Stars</span>
+                            <small>{{ review.created_at|date:"F j, Y, g:i a" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No reviews available for this court yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

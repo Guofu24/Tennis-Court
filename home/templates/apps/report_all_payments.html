@@ -1,0 +1,40 @@
+{% extends 'apps/master.html' %}
+{% load static %}
+
+{% block report_all_payments %}
+<div class="container mt-5">
+    <h2 class="text-center">System Account Overview</h2>
+    
+    <!-- Display current system balance -->
+    <div class="mt-5 text-center">
+        <h3>Current System Balance: ${{ system_balance }}</h3>
+    </div>
+
+    <!-- Display transaction history -->
+    <div class="mt-3">
+        <h4>Transaction History</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Invoice ID</th>
+                    <th>Amount</th>
+                    <th>Transaction Type</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ transaction.invoice.id }}</td>
+                    <td>${{ transaction.amount }}</td>
+                    <td>{{ transaction.transaction_type }}</td>
+                    <td>{{ transaction.timestamp|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock report_all_payments %}

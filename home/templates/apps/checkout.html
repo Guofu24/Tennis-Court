@@ -1,0 +1,29 @@
+ {% extends 'apps/master.html' %} {% block checkout %}
+<div class="container my-5">
+    <div class="card shadow-lg rounded-lg mx-auto" style="max-width: 900px;">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2 class="card-title text-center mb-4">Booking Information</h2>
+                    <p><strong>Tennis Court Name: </strong>{{ court.name }}</p>
+                    <p><strong>Price: </strong>${{ court.price }}</p>
+                    <p><strong>Play Time: </strong> {{ play_time }}</p>
+                    <div class="d-flex justify-content-between mt-4">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <button type="submit" name="cancel" class="btn btn-danger">Cancel</button>
+                        </form>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <button type="submit" name="pay" class="btn btn-success">Pay Now</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <img src="{{ court.ImageURL }}" alt="Tennis Court" class="img-fluid" style="max-width: 100%; object-fit: cover;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

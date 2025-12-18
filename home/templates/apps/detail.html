@@ -1,0 +1,137 @@
+{% extends 'apps/master.html' %} {% block detail %} {% if messages %}
+<div class="container mt-4">
+    {% for message in messages %}
+    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}" role="alert">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %} {% for court in tennis_courts %}
+<div class="container mt-5 mb-5">
+    <div class="card position-relative">
+        <div class="dropdown position-absolute top-0 end-0 m-3">
+            <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="dropdownMenu{{ court.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-three-dots"></i>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu{{ court.id }}">
+                <li><a class="dropdown-item" href="{% url 'review' court.id %}">Rate Court</a></li>
+                <li><a class="dropdown-item" href="{% url 'report_court' court.id %}">Report Damage</a></li>
+            </ul>
+        </div>
+
+        <div class="row g-0">
+            <div class="col-md-6 border-end">
+                <div style="width:100%; height: 100%; padding: 0;" class="d-flex flex-column justify-content-center">
+                    <div style="width:100%; height: 100%;" class="main_image">
+                        <img style="width:100%; height: 100%;" src="{{ court.ImageURL }}" id="main_product_image">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 right-side">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3>{{ court.name }}</h3>
+                        <span class="heart"><i class='bx bx-heart'></i></span>
+                    </div>
+                    <div class="mt-2 pr-3 content">
+                        <p>{{ court.brief }}</p>
+                    </div>
+                    <h4>Price: ${{ court.price }}</h4>
+                    <p><strong>Squared:</strong> {{ court.squared }} m²</p>
+                    <p><strong>Limit:</strong> {{ court.limit }} players</p>
+                    <p><strong>Court Address:</strong> {{ court.court_address }}</p>
+                    <p><strong>Limit time:</strong> {{ court.hours }}</p>
+                    <p><strong>Available Date:</strong> {{ court.dateTime|date:"F d, Y" }}</p>
+
+
+                    <!-- Play Time Dropdown and Rent Button -->
+                    <form method="POST" action="{% url 'rent_court' court.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="play_time"><strong>Play Time:</strong></label>
+                            <select class="form-select" name="play_time" id="play_time" required>
+                                <option value="">-- Select Play Time --</option>
+                                {% for time in court.playTime_list %}
+                                    <option value="{{ time }}"
+                                        {% if time in court.booked_times %} style="color: grey;" disabled {% endif %}>
+                                        {{ time }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <br>
+                        <!-- <div class="form-group">
+                            <label for="date">Select Date</label>
+                            <input type="date" class="form-control" name="date" required>
+                        </div> -->
+                        <button type="submit" class="btn btn-primary">Rent</button>
+                    </form>
+
+
+                    {% if is_admin %}
+                    <div class="buttons d-flex flex-row mt-3 gap-3">
+                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editModal{{ court.id }}">
+                            Edit
+                        </button>
+                        <a href="{% url 'delete_court' court.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this tennis court?')">Delete</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Editing Tennis Court -->
+<div class="modal fade" id="editModal{{ court.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ court.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel{{ court.id }}">Edit Tennis Court: {{ court.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Form for Editing -->
+                <form action="{% url 'edit_court' court.id %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name-{{ court.id }}" class="form-label">Court Name</label>
+                        <input type="text" class="form-control" id="name-{{ court.id }}" name="name" value="{{ court.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="price-{{ court.id }}" class="form-label">Price</label>
+                        <input type="number" class="form-control" id="price-{{ court.id }}" name="price" value="{{ court.price }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address-{{ court.id }}" class="form-label">Address</label>
+                        <input type="text" class="form-control" id="address-{{ court.id }}" name="court_address" value="{{ court.court_address }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="limit-{{ court.id }}" class="form-label">Limit (People)</label>
+                        <input type="number" class="form-control" id="limit-{{ court.id }}" name="limit" value="{{ court.limit }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="squared-{{ court.id }}" class="form-label">Squared (ft²)</label>
+                        <input type="number" class="form-control" id="squared-{{ court.id }}" name="squared" value="{{ court.squared }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hours-{{ court.id }}" class="form-label">Hours</label>
+                        <input type="number" class="form-control" id="hours-{{ court.id }}" name="hours" value="{{ court.hours }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="datetime-{{ court.id }}" class="form-label">Available Dates</label>
+                        <input type="date" class="form-control" id="datetime-{{ court.id }}" name="dateTime" value="{{ court.dateTime|date:'Y-m-d' }}" min="{{ today }}">
+                    </div>
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => alert.style.display = 'none');
+    }, 5000); // Ẩn sau 5 giây
+</script>
+{% endfor %} {% endblock %}

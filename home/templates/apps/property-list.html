@@ -1,0 +1,112 @@
+{% extends 'apps/master.html' %} {% load static %} {% block list_header %}
+<div class="container-fluid header bg-white p-0">
+    <div class="row g-0 align-items-center flex-column-reverse flex-md-row">
+        <div class="col-md-6 p-5 mt-lg-5">
+            <h1 class="display-5 animated fadeIn mb-4">Tennis Court List</h1>
+            <nav aria-label="breadcrumb animated fadeIn">
+                <ol class="breadcrumb text-uppercase">
+                    <li class="breadcrumb-item"><a href="/home/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Court Detail</a></li>
+                    <li class="breadcrumb-item text-body active" aria-current="page">Tennis Court List</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-md-6 animated fadeIn">
+            <img class="img-fluid" src="{% static 'app/img/header.jpg' %}" alt="">
+        </div>
+    </div>
+</div>
+{% endblock list_header %} {% block list %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-0 gx-5 align-items-end">
+            <div class="col-lg-6">
+                <div class="text-start mx-auto mb-5 wow slideInLeft" data-wow-delay="0.1s">
+                    <h1 class="mb-3">Tennis Court Listing</h1>
+                    <p>You can search for the tennis courts you'd like to book below. All of our services are dedicated to bringing you an exceptional experience.</p>
+                </div>
+            </div>
+            <div class="col-lg-6 text-start text-lg-end wow slideInRight" data-wow-delay="0.1s">
+                <ul class="nav nav-pills d-inline-flex justify-content-end mb-5">
+                    <li class="nav-item me-2">
+                        <button class="btn btn-outline-primary active" data-filter="all">All</button>
+                    </li>
+                    <li class="nav-item me-2">
+                        <button class="btn btn-outline-primary" data-filter="Available">Available</button>
+                    </li>
+                    <li class="nav-item me-0">
+                        <button class="btn btn-outline-primary" data-filter="Repairing">Repairing</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane fade show p-0 active">
+                <div class="row g-4" id="tennis-court-container">
+                    {% for court in tennis_courts %}
+                    <div class="col-lg-4 col-md-6 wow fadeInUp tennis-court-item" data-wow-delay="0.1s" style="display: none;" data-status="{{ court.status }}">
+                        <div class="property-item rounded overflow-hidden">
+                            <div class="position-relative overflow-hidden">
+                                <a href=""><img style="height:275px; width: 100%;" class="img-fluid" src="{{ court.ImageURL }}" alt="{{ court.name }}"></a>
+                                <div class="bg-primary rounded text-white position-absolute start-0 top-0 m-4 py-1 px-3">{{ court.status }}</div>
+                                <div class="bg-white rounded-top text-primary position-absolute start-0 bottom-0 mx-4 pt-1 px-3">Tennis court {{ court.id }}</div>
+                            </div>
+                            <div class="p-4 pb-0">
+                                <h5 class="text-primary mb-3">${{ court.price }}</h5>
+                                <a class="d-block h5 mb-2" href="{% url 'detail' %}?id={{ court.id }}">{{ court.name }}</a>
+                                <p><i class="fa fa-map-marker-alt text-primary me-2 "></i>{{ court.court_address }}</p>
+                            </div>
+                            <div class="d-flex border-top ">
+                                <small class="flex-fill text-center border-end py-2 "><i class="fa fa-ruler-combined text-primary me-2 "></i>{{ court.squared }} sqft</small>
+                                <small class="flex-fill text-center border-end py-2 "><i class="fa-solid fa-users text-primary me-2 "></i>{{ court.limit }} people</small>
+                                <small class="flex-fill text-center border-end py-2"><i class="fa-solid fa-clock text-primary me-2 "></i>{{ court.hours }} hours</small>
+                                <small class="flex-fill text-center py-2">
+                                    <i class="fa-solid fa-star text-primary me-2"></i>
+                                    <a href="{% url 'rating' court.id %}" class="text-decoration-none text-dark">
+                                        {{ court.average_rating|floatformat:1 }}
+                                    </a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div>
+                    <div class="col-12 text-center wow fadeInUp" data-wow-delay="0.1s">
+                        <br>
+                        <button id="load-more" class="btn btn-primary py-3 px-5">Show more</button>
+                        <button id="load-less" class="btn btn-secondary py-3 px-5">Re-collect</button>
+                        <br><br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterButtons = document.querySelectorAll('.nav-pills .btn');
+        const courtItems = document.querySelectorAll('.tennis-court-item');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                const filter = this.getAttribute('data-filter');
+
+                courtItems.forEach(item => {
+                    const status = item.getAttribute('data-status');
+                    if (filter === 'all' || status === filter) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+
+{% include 'apps/hire.html' %} {% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'apps/master.html' %} {% load static %} {% block top_up %}
+<div class="container mt-5">
+    <h2>Top Up Your Account</h2>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="bank" class="form-label">Select Bank</label>
+            <select name="bank" id="bank" class="form-select">
+                <option value="bank1">Bank 1</option>
+                <option value="bank2">Bank 2</option>
+                <option value="wallet1">E-Wallet 1</option>
+                <option value="wallet2">E-Wallet 2</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="account_name" class="form-label">Account Name</label>
+            <input type="text" name="account_name" class="form-control" id="account_name" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" id="password" required>
+        </div>
+        <div class="mb-3">
+            <label for="amount" class="form-label">Amount to Top Up</label>
+            <input type="number" name="amount" class="form-control" id="amount" step="0.01" required>
+        </div>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">OK</button>
+            <a href="{% url 'property_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% endblock%}

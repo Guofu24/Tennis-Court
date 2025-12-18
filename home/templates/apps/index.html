@@ -1,0 +1,387 @@
+{% extends 'apps/master.html' %} {% load static %} {% block home_header %}
+<div class="container-fluid header bg-white p-0">
+    <div class="row g-0 align-items-center flex-column-reverse flex-md-row">
+        <div class="col-md-6 p-5 mt-lg-5">
+            <h1 class="display-5 animated fadeIn mb-4">Book A <span class="text-primary">Tennis Court</span> To Play With Your Friend</h1>
+            <p class="animated fadeIn mb-4 pb-2">We aim to provide a tennis court booking website that offers you the best possible experience.</p>
+            <a href="#property-listing" class="btn btn-primary py-3 px-5 me-3 animated fadeIn">Get Started</a>
+        </div>
+        <div class="col-md-6 animated fadeIn">
+            <div class="owl-carousel header-carousel">
+                <div class="owl-carousel-item">
+                    <img class="img-fluid" src="{% static 'app/img/carousel-1.jpg' %}" alt="">
+                </div>
+                <div class="owl-carousel-item">
+                    <img class="img-fluid" src="{% static 'app/img/carousel-2.jpg' %}" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock home_header %} {% block home %}
+<!-- Category Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+            <h1 class="mb-3">Property Types</h1>
+            <p>Eirmod sed ipsum dolor sit rebum labore magna erat. Tempor ut dolore lorem kasd vero ipsum sit eirmod sit. Ipsum diam justo sed rebum vero dolor duo.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
+                <a class="cat-item d-block bg-light text-center rounded p-3" href="">
+                    <div class="rounded p-4">
+                        <div class="icon mb-3">
+                            <img class="img-fluid" src="{% static 'app/img/icon-apartment.png' %}" alt="Icon">
+                        </div>
+                        <h6>Apartment</h6>
+                        <span>123 Properties</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.3s">
+                <a class="cat-item d-block bg-light text-center rounded p-3" href="">
+                    <div class="rounded p-4">
+                        <div class="icon mb-3">
+                            <img class="img-fluid" src="{% static 'app/img/icon-villa.png' %}" alt="Icon">
+                        </div>
+                        <h6>Villa</h6>
+                        <span>123 Properties</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.5s">
+                <a class="cat-item d-block bg-light text-center rounded p-3" href="">
+                    <div class="rounded p-4">
+                        <div class="icon mb-3">
+                            <img class="img-fluid" src="{% static 'app/img/icon-house.png' %}" alt="Icon">
+                        </div>
+                        <h6>Home</h6>
+                        <span>123 Properties</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                <a class="cat-item d-block bg-light text-center rounded p-3" href="">
+                    <div class="rounded p-4">
+                        <div class="icon mb-3">
+                            <img class="img-fluid" src="{% static 'app/img/icon-housing.png' %}" alt="Icon">
+                        </div>
+                        <h6>Office</h6>
+                        <span>123 Properties</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
+                <a class="cat-item d-block bg-light text-center rounded p-3" href="">
+                    <div class="rounded p-4">
+                        <div class="icon mb-3">
+                            <img class="img-fluid" src="{% static 'app/img/icon-building.png' %}" alt="Icon">
+                        </div>
+                        <h6>Building</h6>
+                        <span>123 Properties</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.3s">
+                <a class="cat-item d-block bg-light text-center rounded p-3" href="">
+                    <div class="rounded p-4">
+                        <div class="icon mb-3">
+                            <img class="img-fluid" src="{% static 'app/img/icon-neighborhood.png' %}" alt="Icon">
+                        </div>
+                        <h6>Townhouse</h6>
+                        <span>123 Properties</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.5s">
+                <a class="cat-item d-block bg-light text-center rounded p-3" href="">
+                    <div class="rounded p-4">
+                        <div class="icon mb-3">
+                            <img class="img-fluid" src="{% static 'app/img/icon-condominium.png' %}" alt="Icon">
+                        </div>
+                        <h6>Shop</h6>
+                        <span>123 Properties</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                <a class="cat-item d-block bg-light text-center rounded p-3" href="">
+                    <div class="rounded p-4">
+                        <div class="icon mb-3">
+                            <img class="img-fluid" src="{% static 'app/img/icon-luxury.png' %}" alt="Icon">
+                        </div>
+                        <h6>Garage</h6>
+                        <span>123 Properties</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- About Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            {% if top_court %}
+            <div class="col-lg-6 wow fadeIn" data-wow-delay="0.1s">
+                <div class="about-img position-relative overflow-hidden p-5 pe-0">
+                    <img class="img-fluid w-100" src="{{ top_court.ImageURL }}" alt="{{ top_court.name }}">
+                </div>
+            </div>
+            <div class="col-lg-6 wow fadeIn" data-wow-delay="0.5s">
+                <h1 class="mb-4">#1 Place To Find The Perfect Court: {{ top_court.name }}</h1>
+                <p class="mb-4">{{ top_court.description }}</p>
+                <p><i class="fa fa-check text-primary me-3"></i>Address: {{ top_court.court_address }}</p>
+                <p><i class="fa fa-check text-primary me-3"></i>Price: ${{ top_court.price }}</p>
+                <p><i class="fa fa-check text-primary me-3"></i>Limit: {{ top_court.limit }} people</p>
+                <p><i class="fa fa-check text-primary me-3"></i>Number of Votes: {{ top_court.vote_count }}</p>
+                <a class="btn btn-primary py-3 px-5 mt-3" href="{% url 'detail' %}?id={{ top_court.id }}">View Details</a>
+            </div>
+            {% else %}
+            <div class="col-lg-12 text-center">
+                <h2>No courts have been voted yet.</h2>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<!-- About End -->
+
+
+<!-- Property List Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-0 gx-5 align-items-end">
+            <div class="col-lg-6">
+                <div class="text-start mx-auto mb-5 wow slideInLeft" data-wow-delay="0.1s">
+                    <h1 class="mb-3">Tennis Court Listing</h1>
+                    <p>You can search for the tennis courts you'd like to book below. All of our services are dedicated to bringing you an exceptional experience.</p>
+                </div>
+            </div>
+            <div class="col-lg-6 text-start text-lg-end wow slideInRight" data-wow-delay="0.1s">
+                <ul class="nav nav-pills d-inline-flex justify-content-end mb-5">
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-primary active" data-bs-toggle="pill" href="#tab-1">All</a>
+                    </li>
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-primary" data-bs-toggle="pill" href="#tab-2">Available</a>
+                    </li>
+                    <li class="nav-item me-0">
+                        <a class="btn btn-outline-primary" data-bs-toggle="pill" href="#tab-3">Repairing</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane fade show p-0 active">
+                <div class="row g-4" id="tennis-court-container">
+                    {% for court in tennis_courts %}
+                    <div class="col-lg-4 col-md-6 wow fadeInUp tennis-court-item" data-wow-delay="0.1s" style="display: none;">
+                        <div class="property-item rounded overflow-hidden">
+                            <div class="position-relative overflow-hidden">
+                                <a href=""><img style="height:275px; width: 100%;" class="img-fluid" src="{{ court.ImageURL }}" alt="{{ court.name }}"></a>
+                                <div class="bg-primary rounded text-white position-absolute start-0 top-0 m-4 py-1 px-3">{{ court.status }}</div>
+                                <div class="bg-white rounded-top text-primary position-absolute start-0 bottom-0 mx-4 pt-1 px-3">Tennis court {{ court.id }}</div>
+                            </div>
+                            <div class="p-4 pb-0">
+                                <h5 class="text-primary mb-3">${{ court.price }}</h5>
+                                <a class="d-block h5 mb-2" href="{% url 'detail' %}?id={{ court.id }}">{{ court.name }}</a>
+                                <p><i class="fa fa-map-marker-alt text-primary me-2 "></i>{{ court.court_address }}</p>
+                            </div>
+                            <div class="d-flex border-top ">
+                                <small class="flex-fill text-center border-end py-2 "><i class="fa fa-ruler-combined text-primary me-2 "></i>{{ court.squared }} sqft</small>
+                                <small class="flex-fill text-center border-end py-2 "><i class="fa-solid fa-users text-primary me-2 "></i>{{ court.limit }} people</small>
+                                <small class="flex-fill text-center border-end py-2"><i class="fa-solid fa-clock text-primary me-2 "></i>{{ court.hours }} hours</small>
+                                <small class="flex-fill text-center py-2">
+                                    <i class="fa-solid fa-star text-primary me-2"></i>
+                                    <a href="{% url 'rating' court.id %}" class="text-decoration-none text-dark">
+                                        {{ court.average_rating|floatformat:1 }}
+                                    </a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div>
+                    <div class="col-12 text-center wow fadeInUp" data-wow-delay="0.1s">
+                        <br>
+                        <a class="btn btn-primary py-3 px-5" href="/property_list/">Browse More Property</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Property List End -->
+
+
+<!-- Call to Action Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="bg-light rounded p-3">
+            <div class="bg-white rounded p-4" style="border: 1px dashed rgba(0, 185, 142, .3)">
+                <div class="row g-5 align-items-center">
+                    <div class="col-lg-6 wow fadeIn" data-wow-delay="0.1s">
+                        <img class="img-fluid rounded w-100" src="{% static 'app/img/call-to-action.jpg' %}" alt="">
+                    </div>
+                    <div class="col-lg-6 wow fadeIn" data-wow-delay="0.5s">
+                        <div class="mb-4">
+                            <h1 class="mb-3">Contact With Our Certified Team</h1>
+                            <p>Our team is trained and certified. If you have any questions or need professional assistance, feel free to reach out to us by phone or schedule an appointment below.</p>
+                        </div>
+                        <a href="" class="btn btn-primary py-3 px-4 me-2"><i class="fa fa-phone-alt me-2"></i>Make A Call</a>
+                        <a href="" class="btn btn-dark py-3 px-4"><i class="fa fa-calendar-alt me-2"></i>Get Appoinment</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Call to Action End -->
+
+
+<!-- Team Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+            <h1 class="mb-3">Team developer</h1>
+            <p>Often said that pain sits alongside hard work and greatness. Time with hardship, words flow truly as they sit at ease. Just words alone carry truth, doubling both pain and solace.</p>
+        </div>
+        <div class="row d-flex justify-content-center flex-wrap g-4">
+            <div class="col-md-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="team-item rounded overflow-hidden">
+                    <div class="position-relative" style="display: flex; justify-content: center; align-items: center;">
+                        <img class="img-fluid" style="height:300px;" src="{% static 'app/img/Phú1.png' %}" alt="">
+                        <div class="position-absolute start-50 top-100 translate-middle d-flex align-items-center">
+                            <a class="btn btn-square mx-1" href="https://web.facebook.com/Phu22122004"><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-square mx-1" href="https://twitter.com/guofu24"><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-square mx-1" href="https://www.instagram.com/_guofu24_/"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="text-center p-4 mt-3">
+                        <h5 class="fw-bold mb-0">Nguyễn Quốc Phú</h5>
+                        <small>Project Owner</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="team-item rounded overflow-hidden">
+                    <div class="position-relative" style="display: flex; justify-content: center; align-items: center;">
+                        <img class="img-fluid" src="{% static 'app/img/team-2.jpg' %}" alt="">
+                        <div class="position-absolute start-50 top-100 translate-middle d-flex align-items-center">
+                            <a class="btn btn-square mx-1" href="https://www.facebook.com/mih.tu4n"><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-square mx-1" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-square mx-1" href=""><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="text-center p-4 mt-3">
+                        <h5 class="fw-bold mb-0">Lầu Minh Tuấn</h5>
+                        <small>Scrum Master</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 wow fadeInUp" data-wow-delay="0.5s">
+                <div class="team-item rounded overflow-hidden">
+                    <div class="position-relative" style="display: flex; justify-content: center; align-items: center;">
+                        <img class="img-fluid" src="{% static 'app/img/team-2.jpg' %}" alt="">
+                        <div class="position-absolute start-50 top-100 translate-middle d-flex align-items-center">
+                            <a class="btn btn-square mx-1" href="https://www.facebook.com/tuananhscdz"><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-square mx-1" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-square mx-1" href="https://www.instagram.com/t.ankk_14/?utm_source=ig_web_button_share_sheet"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="text-center p-4 mt-3">
+                        <h5 class="fw-bold mb-0">Nguyễn Tuấn Anh</h5>
+                        <small>Designation</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
+                <div class="team-item rounded overflow-hidden">
+                    <div class="position-relative" style="display: flex; justify-content: center; align-items: center;">
+                        <img class="img-fluid" style="height:300px;" src="{% static 'app/img/tùng.jpg' %}" alt="">
+                        <div class="position-absolute start-50 top-100 translate-middle d-flex align-items-center">
+                            <a class="btn btn-square mx-1" href="https://www.facebook.com/tungpv2902"><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-square mx-1" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-square mx-1" href=""><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="text-center p-4 mt-3">
+                        <h5 class="fw-bold mb-0">Phạm Văn Tùng</h5>
+                        <small>Designation</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 wow fadeInUp" data-wow-delay="0.9s">
+                <div class="team-item rounded overflow-hidden">
+                    <div class="position-relative" style="display: flex; justify-content: center; align-items: center;">
+                        <img class="img-fluid" src="{% static 'app/img/Hiếu.png' %}" alt="">
+                        <div class="position-absolute start-50 top-100 translate-middle d-flex align-items-center">
+                            <a class="btn btn-square mx-1" href=""><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-square mx-1" href=""><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-square mx-1" href=""><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                    <div class="text-center p-4 mt-3">
+                        <h5 class="fw-bold mb-0">Vũ Lê Minh Hiếu</h5>
+                        <small>Designation</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Team End -->
+
+
+<!-- Testimonial Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+            <h1 class="mb-3">Bring a great experience!</h1>
+            <p>We strive to bring exceptional experiences to our customers. For us, success is measured by your satisfaction.</p>
+        </div>
+        <div class="owl-carousel testimonial-carousel wow fadeInUp" data-wow-delay="0.1s">
+            <div class="testimonial-item bg-light rounded p-3">
+                <div class="bg-white border rounded p-4">
+                    <p>Tempor stet labore dolor clita stet diam amet ipsum dolor duo ipsum rebum stet dolor amet diam stet. Est stet ea lorem amet est kasd kasd erat eos</p>
+                    <div class="d-flex align-items-center">
+                        <img class="img-fluid flex-shrink-0 rounded" src="{% static 'app/img/testimonial-1.jpg' %}" style="width: 45px; height: 45px;">
+                        <div class="ps-3">
+                            <h6 class="fw-bold mb-1">Client Name</h6>
+                            <small>Profession</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-item bg-light rounded p-3">
+                <div class="bg-white border rounded p-4">
+                    <p>Tempor stet labore dolor clita stet diam amet ipsum dolor duo ipsum rebum stet dolor amet diam stet. Est stet ea lorem amet est kasd kasd erat eos</p>
+                    <div class="d-flex align-items-center">
+                        <img class="img-fluid flex-shrink-0 rounded" src="{% static 'app/img/testimonial-2.jpg' %}" " style="width: 45px; height: 45px; ">
+                                <div class="ps-3 ">
+                                    <h6 class="fw-bold mb-1 ">Client Name</h6>
+                                    <small>Profession</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-item bg-light rounded p-3 ">
+                        <div class="bg-white border rounded p-4 ">
+                            <p>Tempor stet labore dolor clita stet diam amet ipsum dolor duo ipsum rebum stet dolor amet diam stet. Est stet ea lorem amet est kasd kasd erat eos</p>
+                            <div class="d-flex align-items-center ">
+                                <img class="img-fluid flex-shrink-0 rounded " src="{% static 'app/img/testimonial-3.jpg' %} "" style="width: 45px; height: 45px;">
+                        <div class="ps-3">
+                            <h6 class="fw-bold mb-1">Client Name</h6>
+                            <small>Profession</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock home%}

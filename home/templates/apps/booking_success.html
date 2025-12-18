@@ -1,0 +1,23 @@
+{% extends 'apps/master.html' %} {% load static %} {% block booking_success %}
+<div class="container my-5">
+    <div class="card shadow-lg rounded-lg">
+        <div class="card-body">
+            <h1 class="text-center text-success">Booking Confirmation</h1>
+            <p>Dear {{ user.username }},</p>
+            <p>Thank you for booking with us. Below are the details of your booking:</p>
+            <ul>
+                <li><strong>Tennis Court:</strong> {{ court.name }}</li>
+                <li><strong>Address:</strong> {{ court.court_address }}</li>
+                <li><strong>Play Time:</strong> {{ play_time }}</li>
+                <li><strong>Price:</strong> ${{ court.price }}</li>
+            </ul>
+            <p class="mt-4">We look forward to seeing you!</p>
+            <p>Best regards,</p>
+            <p><strong>The Tennis Booking Team</strong></p>
+            <div class="text-center mt-4">
+                <a href="{% url 'property_list' %}" class="btn btn-primary">Back to Courts List</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

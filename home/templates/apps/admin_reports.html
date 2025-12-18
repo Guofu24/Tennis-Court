@@ -1,0 +1,60 @@
+{% extends "apps/master.html" %} 
+{% load static %} 
+{% block allReport %}
+<div class="container mt-5">
+    <h2 style="text-align:center">Damaged Court</h2>
+    <div class="d-flex justify-content-end mb-3">
+        <a href="?download=pdf{% if request.GET.court_id %}&court_id={{ request.GET.court_id }}{% endif %}" class="btn btn-primary">
+            <i class="bi bi-file-earmark-pdf"></i> Download PDF
+        </a>
+    </div>
+    <table class="table table-bordered table-fixed" style="table-layout: fixed;">
+        <thead>
+            <tr>
+                <th style="width: 5%;">No.</th>
+                <th style="width: 15%;">Court Name</th>
+                <th style="width: 7%;">Reporter</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 10%;">Missing Ball</th>
+                <th style="width: 13%;">Quality of Court</th>
+                <th style="width: 20%;">Another Damage</th>
+                <th style="width: 22%;">Image</th>
+                <th style="width: 13%;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ report.court.name }}</td>
+                <td>{{ report.reporter.username }}</td>
+                <td>{{ report.court_status }}</td>
+                <td>{{ report.quantity_of_balls }}</td>
+                <td>{{ report.quality_of_court }}</td>
+                <td style="word-break: break-word; white-space: normal;">{{ report.additional_info }}</td>
+                <td>
+                    {% if report.image %}
+                    <img src="{{ report.image.url }}" alt="Report Image" width="100%" height="200px">
+                    {% else %}
+                    No image
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="report_id" value="{{ report.id }}">
+                        <button type="submit" name="action" value="accept" {% if report.court.status == 'Repairing' %}disabled{% endif %}>Accept</button>
+                        <button type="submit" name="action" value="fixed" {% if report.court.status == 'Available' %}disabled{% endif %}>Fixed</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9">No reports found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+</div>
+{% endblock %}

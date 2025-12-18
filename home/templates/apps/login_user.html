@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/css/style_form.css'%}">
+     <title>Login and Register User</title>
+</head>
+
+<body>
+
+    <div class="container" id="container" style="width: 1200px; height: 800px;">
+        <!-- Form đăng ký -->
+        <div class="form-container sign-up">
+            <form method="POST">
+                {% csrf_token %}
+                <h1>Create User's Account</h1>
+                <div class="social-icons">
+                    <a href="#" class="icon"><i class="fa-brands fa-google"></i></a>
+                    <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+                </div>
+                <span>or use your email for registration</span>
+
+                <!-- Form đăng ký với các lớp tùy chỉnh -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1m">{{ register_form.username.label_tag }} {{ register_form.username }}</label>
+                            {% if register_form.username.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1n">{{ register_form.userID.label_tag }} <br> {{ register_form.userID }}</label>
+                            {% if register_form.userID.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.userID.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- First Name and Last Name -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1m">{{ register_form.first_name.label_tag }} {{ register_form.first_name }}</label>
+                            {% if register_form.first_name.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1n">{{ register_form.gender.label_tag }} <br> {{ register_form.gender }} </label>
+                            {% if register_form.gender.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.gender.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address and Date of Birth -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1n">{{ register_form.address.label_tag }} <br>{{ register_form.address }}</label>
+                            {% if register_form.address.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.address.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1n">{{ register_form.dob.label_tag }} <br>{{ register_form.dob }}</label>
+                            {% if register_form.dob.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.dob.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phone and Email -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1n">{{ register_form.phone.label_tag }} <br> {{ register_form.phone }} </label>
+                            {% if register_form.phone.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1n">{{ register_form.email.label_tag }} <br>{{ register_form.email }}</label>
+                            {% if register_form.email.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password and Confirm Password -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1n">{{ register_form.password1.label_tag }} <br> {{ register_form.password1 }}</label>
+                            {% if register_form.password1.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.password1.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="form-outline">
+                            <label class="form-label" for="form3Example1m">{{ register_form.password2.label_tag }} {{ register_form.password2 }}</label>
+                            {% if register_form.first_name.errors %}
+                            <div class="alert alert-danger mt-2">{{ register_form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" name="register">Sign Up</button>
+            </form>
+        </div>
+
+        <!-- Form đăng nhập -->
+        <div class="form-container sign-in">
+            <form method="POST">
+                {% csrf_token %}
+                <h1>Login as User</h1>
+                <div class="social-icons">
+                    <a href="#" class="icon"><i class="fa-brands fa-google"></i></a>
+                    <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+                </div>
+                <span>or use your email password</span>
+
+                <!-- Render form đăng nhập -->
+                <input type="text" name="userName" placeholder="UserName">
+                <input type="password" name="userPass" placeholder="Password">
+
+                <button type="submit" name="login">Sign In</button>
+            </form>
+        </div>
+        <div class="toggle-container">
+            <div class="toggle">
+                <div class="toggle-panel toggle-left">
+                    <h1>Welcome Back!</h1>
+                    <p>If you have an account, click on the below button to login. </p>
+                    <button class="hidden" id="login">Sign In</button>
+                </div>
+                <div class="toggle-panel toggle-right">
+                    <h1>Hello, Friend!</h1>
+                    <p>If you don't have any user's account, click on the below button to create a new one.</p>
+                    <button class="hidden" id="register">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'app/js/script.js'%}"></script>
+</body>
+
+</html>

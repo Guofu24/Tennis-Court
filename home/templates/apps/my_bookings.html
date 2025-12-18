@@ -1,0 +1,74 @@
+{% extends 'apps/master.html' %}
+
+{% block all %}
+  <h2 class="text-center my-4">Your Bookings</h2>
+
+  <!-- Hiển thị thông báo -->
+  {% if messages %}
+    <div class="container mb-4">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if bookings %}
+    <div class="row g-4">
+      {% for booking in bookings %}
+        <div class="col-md-6 col-lg-4">
+          <!-- Card -->
+          <div class="card shadow-sm h-100">
+            <!-- Card Image -->
+            <img src="{{ booking.tennis_court.ImageURL }}" 
+                 alt="{{ booking.tennis_court.name }}" 
+                 class="card-img-top" 
+                 style="height: 180px; object-fit: cover;">
+                 
+            <!-- Card Body -->
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">{{ booking.tennis_court.name }}</h5>
+              <p class="card-text text-muted small">
+                <strong>Price:</strong> ${{ booking.tennis_court.price }} <br>
+                <strong>Limit:</strong> {{ booking.tennis_court.limit }} people <br>
+                <strong>Address:</strong> {{ booking.tennis_court.court_address }} <br>
+              </p>
+              
+              <!-- Edit Play Time -->
+              <form method="POST" class="mt-auto">
+                {% csrf_token %}
+                <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                <label for="play_time_{{ booking.id }}" class="form-label small">Play Time:</label>
+                <select name="play_time" id="play_time_{{ booking.id }}" class="form-select mb-2">
+                  {% for time in booking.tennis_court.available_times %}
+                    <option value="{{ time }}" {% if time == booking.play_time %}selected{% endif %}>
+                      {{ time }}
+                    </option>
+                  {% endfor %}
+                </select>
+                <div class="d-flex gap-2">
+                  <button type="submit" name="edit" class="btn btn-primary btn-sm flex-grow-1" onclick="return confirmUpdate();">Update</button>
+                  <button type="submit" name="cancel" class="btn btn-danger btn-sm flex-grow-1" onclick="return confirmCancel();">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-center text-muted">You have no bookings yet.</p>
+  {% endif %}
+
+  <script>
+    function confirmCancel() {
+        return confirm("Do you want to cancel this booking?");
+    }
+
+    function confirmUpdate() {
+      return confirm("Do you want to change to this play time?");
+  }
+  </script>
+{% endblock %}

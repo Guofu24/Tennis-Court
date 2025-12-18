@@ -1,0 +1,178 @@
+{% extends "apps/master.html" %} {% load static %} {% block add %}
+<style>
+    /* Form Row and Column layout */
+    
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        justify-content: space-between;
+    }
+    /* Each column will take up equal space and be responsive */
+    
+    .form-column {
+        flex: 1;
+        min-width: calc(50% - 20px);
+        margin-bottom: 15px;
+    }
+    /* Smooth animation for input fields */
+    
+    .form-column input,
+    .form-column select,
+    .form-column textarea {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        margin-top: 5px;
+        font-size: 16px;
+        transition: 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    /* Change border color and add focus shadow */
+    
+    .form-column input:focus,
+    .form-column select:focus,
+    .form-column textarea:focus {
+        border-color: #00c6ff;
+        box-shadow: 0 0 8px rgba(0, 198, 255, 0.6);
+    }
+    /* Add more space to the brief textarea */
+    
+    .brief-column textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+    /* Add some style to the labels */
+    
+    .form-column label {
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    /* Image preview box */
+    
+    .image-preview {
+        width: 100%;
+        max-width: 300px;
+        margin-top: 15px;
+        display: none;
+        transition: opacity 0.3s ease;
+    }
+    /* Button Styling */
+    
+    button[type="submit"] {
+        background-color: #00B98E;
+        border: none;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        padding: 12px;
+        border-radius: 5px;
+        width: 100%;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    button[type="submit"]:hover {
+        background-color: #007bff;
+    }
+    /* Responsiveness for smaller screens */
+    
+    @media (max-width: 768px) {
+        .form-column {
+            min-width: 100%;
+        }
+        .container {
+            padding: 20px;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h2 style="color:white;">Add new tennis court</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-column">
+                                <div class="mb-3">
+                                    {{ form.name.label_tag }}
+                                    <input type="text" class="form-control" name="{{ form.name.name }}" placeholder="Enter name..." required>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.price.label_tag }}
+                                    <input type="number" class="form-control" name="{{ form.price.name }}" placeholder="Enter price..." step="0.01" required>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.limit.label_tag }}
+                                    <input type="number" class="form-control" name="{{ form.limit.name }}" placeholder="Limit the number of people..." required>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.dateTime.label_tag }}
+                                    <input type="date" class="form-control" name="{{ form.dateTime.name }}" required>
+                                </div>
+
+                                <!-- <div class="mb-3">
+                                    {{ form.playTime.label_tag }}
+                                    <select class="form-control" name="{{ form.playTime.name }}">
+                                        {% for time in form.playTime.field.choices %}
+                                            <option value="{{ time.0 }}" {% if time.0 == form.playTime.value %}selected{% endif %}>
+                                                {{ time.1 }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div> -->
+                                <div class="mb-3 brief-column">
+                                    {{ form.brief.label_tag }}
+                                    <textarea class="form-control" name="{{ form.brief.name }}" placeholder="Description"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-column">
+                                <div class="mb-3">
+                                    {{ form.court_address.label_tag }}
+                                    <input type="text" class="form-control" name="{{ form.court_address.name }}" placeholder="Enter tennis court address..." required>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.squared.label_tag }}
+                                    <input type="number" class="form-control" name="{{ form.squared.name }}" placeholder="Enter area (sqft)..." step="0.01" required>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.hours.label_tag }}
+                                    <input type="number" class="form-control" name="{{ form.hours.name }}" placeholder="Enter playing time..." required>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.image.label_tag }}
+                                    <input type="file" class="form-control" name="{{ form.image.name }}" accept="image/*" onchange="previewImage(event)">
+                                    <img id="imagePreview" class="image-preview" src="" alt="Image Preview">
+                                </div>
+
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary py-3 px-5">Add</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const output = document.getElementById('imagePreview');
+            output.src = reader.result;
+            output.style.display = 'block';
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>
+
+{% endblock add %}

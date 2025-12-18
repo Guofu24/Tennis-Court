@@ -1,0 +1,9 @@
+{% extends "apps/master.html" %} {% load static %} {% block review %}
+<h2>Leave a Review for {{ court.name }}</h2>
+
+<form method="post">
+    {% csrf_token %} {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Submit Review</button>
+</form>
+
+{% endblock %}

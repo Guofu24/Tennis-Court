@@ -1,0 +1,52 @@
+{% extends 'apps/master.html' %} {% load static %} {% block rating %}
+<div class="container py-5">
+    <h2 class="mb-4 text-center">Reviews for {{ tennis_court.name }}</h2>
+
+    <!-- Court Information Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Court Information</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Court Name:</strong> {{ tennis_court.name }}</p>
+            <p><strong>Address:</strong> {{ tennis_court.court_address }}</p>
+            <p><strong>Average Rating:</strong>
+                <span class="badge bg-warning text-dark">{{ tennis_court.average_rating|floatformat:1 }} / 5.0</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- User Reviews Section -->
+    <h3 class="mb-4">User Reviews</h3>
+    {% if tennis_court.reviews.all %}
+    <div class="row g-4">
+        {% for review in tennis_court.reviews.all %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <!-- User Info -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            <img src="{% static 'images/user-placeholder.png' %}" alt="User Avatar" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                        </div>
+                        <div>
+                            <h6 class="mb-0">{{ review.user.username }}</h6>
+                            <small class="text-muted">Reviewed on {{ review.created_at|date:"F j, Y" }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Rating and Comment -->
+                    <div class="mb-2">
+                        <span class="badge bg-success">{{ review.rating }} Stars</span>
+                    </div>
+                    <p class="mb-0 text-muted">{{ review.comment }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted text-center">No reviews available for this court yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
