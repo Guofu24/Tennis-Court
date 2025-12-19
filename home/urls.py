@@ -40,5 +40,6 @@ urlpatterns = [
     path('check_password_reset_status/', views.check_password_reset_status, name='check_password_reset_status'),
     path('report_all_payments/', views.revenue_data, name='revenue_data'),
     path('delete_account', views.delete_account, name='delete_account'),
+    path('test-media/', views.test_media),
 ]
 

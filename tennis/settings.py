@@ -26,7 +26,14 @@ SECRET_KEY = "django-insecure-ss)lhpzz0r1tl)kj#(%0=!5r8s8lcug_kove_l2u#lvr0#9b3%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    ".ngrok-free.app",  # cho phép mọi subdomain ngrok free
+    "sclerodermatous-bodhi-untimed.ngrok-free.dev",  # hoặc thêm riêng domain này
+]
+
+
 
 
 # Application definition
@@ -130,13 +137,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True  # Lưu ý: Đảm bảo dịch vụ hỗ trợ TLS
-# EMAIL_HOST_USER = 'guofu2004@gmail.com'  # Tài khoản Gmail của bạn
-# EMAIL_HOST_PASSWORD = 'phu22122004'  
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-import django_heroku
-django_heroku.settings(locals())
+CSRF_TRUSTED_ORIGINS = [
+    "https://sclerodermatous-bodhi-untimed.ngrok-free.dev",
+    "https://*.ngrok-free.app",
+]
+
+

@@ -18,6 +18,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.forms import SetPasswordForm
 from django.core.paginator import Paginator
+import os
 
 def auth_user(request):
     register_form = UserRegistrationForm()
@@ -776,3 +777,9 @@ def login1(request):
     return render(request, "apps/login.html")
 
 
+def test_media(request):
+    file_path = os.path.join(settings.MEDIA_ROOT, "San1_ky5T64P.jpg")
+    if os.path.exists(file_path):
+        return HttpResponse(f"Found file: {file_path}")
+    else:
+        return HttpResponse("File NOT FOUND")
