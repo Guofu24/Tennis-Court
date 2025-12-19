@@ -244,6 +244,58 @@ def property_list(request):
     
     return render(request, 'apps/property-list.html', {'tennis_courts': tennis_courts})
 
+
+def search_courts(request):
+    """Tìm kiếm sân tennis theo tên, giá và địa chỉ"""
+    tennis_courts = Tennis.objects.all()
+    
+    # Lấy các tham số tìm kiếm
+    name = request.GET.get('name', '').strip()
+    price = request.GET.get('price', '').strip()
+    address = request.GET.get('address', '').strip()
+    
+    # Kiểm tra nếu không có tham số nào được nhập
+    if not name and not price and not address:
+        messages.info(request, 'Vui lòng nhập ít nhất một tiêu chí tìm kiếm.')
+        return redirect('property_list')
+    
+    # Lọc theo tên (tìm kiếm không phân biệt hoa thường)
+    if name:
+        tennis_courts = tennis_courts.filter(name__icontains=name)
+    
+    # Lọc theo giá
+    if price:
+        if price == '0-500':
+            tennis_courts = tennis_courts.filter(price__lt=500)
+        elif price == '500-2000':
+            tennis_courts = tennis_courts.filter(price__gte=500, price__lt=2000)
+        elif price == '2000-5000':
+            tennis_courts = tennis_courts.filter(price__gte=2000, price__lt=5000)
+        elif price == '5000+':
+            tennis_courts = tennis_courts.filter(price__gte=5000)
+    
+    # Lọc theo địa chỉ
+    if address:
+        tennis_courts = tennis_courts.filter(court_address__icontains=address)
+    
+    # Thêm playTime_list cho mỗi sân
+    for court in tennis_courts:
+        court.playTime_list = court.playTime.split(', ') if court.playTime else []
+    
+    # Tạo thông báo kết quả
+    if tennis_courts.exists():
+        messages.success(request, f'Tìm thấy {tennis_courts.count()} sân tennis phù hợp.')
+    else:
+        messages.warning(request, 'Không tìm thấy sân tennis nào phù hợp với tiêu chí tìm kiếm.')
+    
+    return render(request, 'apps/property-list.html', {
+        'tennis_courts': tennis_courts,
+        'search_name': name,
+        'search_price': price,
+        'search_address': address,
+    })
+
+
 def detail(request):
     if not request.user.is_authenticated:  
         messages.error(request, "Redirect to login page.")

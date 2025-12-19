@@ -43,5 +43,7 @@ urlpatterns = [
     path('test-media/', views.test_media),
     # Google Login
     path('google-login/', views.google_login, name='google_login'),
+    # Search
+    path('search/', views.search_courts, name='search_courts'),
 ]
 
