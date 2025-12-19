@@ -1,6 +1,46 @@
-from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth.models import AbstractUser, Group, Permission, BaseUserManager
 from django.db import models
 from django.utils.timezone import now, timedelta
+import uuid
+
+
+class CustomUserManager(BaseUserManager):
+    """Custom manager for CustomUser model"""
+    
+    def create_user(self, username, email=None, password=None, **extra_fields):
+        if not username:
+            raise ValueError('Username is required')
+        
+        email = self.normalize_email(email) if email else None
+        
+        # Auto-generate userID if not provided
+        if 'userID' not in extra_fields or not extra_fields['userID']:
+            extra_fields['userID'] = f"U{uuid.uuid4().hex[:8].upper()}"
+        
+        extra_fields.setdefault('role', 'user')
+        
+        user = self.model(username=username, email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('role', 'admin')
+        
+        # Auto-generate userID for superuser
+        if 'userID' not in extra_fields or not extra_fields['userID']:
+            extra_fields['userID'] = f"ADMIN{uuid.uuid4().hex[:6].upper()}"
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(username, email, password, **extra_fields)
+
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
@@ -15,6 +55,9 @@ class CustomUser(AbstractUser):
     address = models.CharField(max_length=255, blank=True, null=True)
     photo = models.ImageField(null=True, blank=True)
     balance = models.FloatField(default=0.0)  
+
+    # Custom manager
+    objects = CustomUserManager()
 
     groups = models.ManyToManyField(
         Group,
@@ -60,7 +103,10 @@ class CustomUser(AbstractUser):
         return url
 
     def save(self, *args, **kwargs):
-        if self.role == 'admin':
+        # Set is_staff based on role, but don't override for superusers
+        if self.is_superuser:
+            self.is_staff = True
+        elif self.role == 'admin':
             self.is_staff = True
         else:
             self.is_staff = False

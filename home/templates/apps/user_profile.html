@@ -93,8 +93,10 @@
                                 </div>
                                 <div class="col-sm-9 text-secondary">
                                     <select name="gender" class="form-control" id="gender" disabled>
+                                        <option value="" {% if not user.gender %}selected{% endif %}>-- Select --</option>
                                         <option value="Male" {% if user.gender == "Male" %}selected{% endif %}>Male</option>
                                         <option value="Female" {% if user.gender == "Female" %}selected{% endif %}>Female</option>
+                                        <option value="Other" {% if user.gender == "Other" %}selected{% endif %}>Other</option>
                                     </select>
                                 </div>
                             </div>

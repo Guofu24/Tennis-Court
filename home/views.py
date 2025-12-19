@@ -402,11 +402,27 @@ def transaction_history(request):
 def edit_profile(request):
         if request.method == 'POST':
             user = request.user
-            user.first_name = request.POST.get('full_name', user.first_name)
+            # Parse full_name into first_name and last_name
+            full_name = request.POST.get('full_name', '').strip()
+            if full_name:
+                name_parts = full_name.split()
+                if len(name_parts) >= 2:
+                    # Vietnamese name: last word is first_name (tên), rest is last_name (họ)
+                    user.first_name = name_parts[-1]  # Tên (ví dụ: Phú)
+                    user.last_name = ' '.join(name_parts[:-1])  # Họ (ví dụ: Nguyễn Quốc)
+                else:
+                    user.first_name = full_name
+                    user.last_name = ''
+            
             user.email = request.POST.get('email', user.email)
             user.phone = request.POST.get('phone', user.phone)
             user.address = request.POST.get('address', user.address)
-            user.dob = request.POST.get('dob', user.dob)
+            
+            # Handle date of birth
+            dob = request.POST.get('dob')
+            if dob:
+                user.dob = dob
+            
             user.gender = request.POST.get('gender', user.gender)
             if request.FILES.get('photo'):
                 user.photo = request.FILES['photo']
@@ -783,3 +799,8 @@ def test_media(request):
         return HttpResponse(f"Found file: {file_path}")
     else:
         return HttpResponse("File NOT FOUND")
+
+def google_login(request):
+    """Redirect to Google OAuth login"""
+    from allauth.socialaccount.providers.google.views import oauth2_login
+    return oauth2_login(request)

@@ -41,5 +41,7 @@ urlpatterns = [
     path('report_all_payments/', views.revenue_data, name='revenue_data'),
     path('delete_account', views.delete_account, name='delete_account'),
     path('test-media/', views.test_media),
+    # Google Login
+    path('google-login/', views.google_login, name='google_login'),
 ]
 

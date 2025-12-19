@@ -1,0 +1,30 @@
+{% extends "apps/master.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Third-Party Login Failure</h4>
+                </div>
+                <div class="card-body">
+                    <p>An error occurred while attempting to login via your third-party account.</p>
+                    
+                    {% if auth_error %}
+                    <div class="alert alert-danger">
+                        <strong>Error Details:</strong><br>
+                        {{ auth_error }}
+                    </div>
+                    {% endif %}
+                    
+                    <a href="/login_register_user/" class="btn btn-primary">
+                        Back to Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

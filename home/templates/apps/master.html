@@ -258,7 +258,7 @@
                             <a class="nav-link" href="/profile/">Welcome, {{ request.user.username }}</a>
                         </li> {% endcomment %}
                         <li class="nav-item dropdown">
-                            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Welcome, {{ request.user.username }}</a>
+                            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Welcome, {% if request.user.first_name %}{{ request.user.first_name }}{% else %}{{ request.user.username }}{% endif %}</a>
                             <div class="dropdown-menu rounded-0 m-0">
                                 <a href="/profile/" class="dropdown-item">My Profile</a>
                                 {% if request.user.is_authenticated %}
