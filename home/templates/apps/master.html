@@ -296,7 +296,8 @@
         {% block about_header%} {% endblock about_header%} {% block home_header %} {% endblock home_header %} {% block error_header %}{% endblock error_header%} {% block contact_header%} {% endblock contact_header%} {% block team_header %} {% endblock team_header%}
         {% block list_header %} {% endblock list_header %} {% block type_header %} {% endblock type_header %} {% block testimonial_header %} {% endblock testimonial_header%}
 
-        <!-- Search Start -->
+        <!-- Search Start - Ẩn ở các trang about, contact, property_agent, profile -->
+        {% if request.path != '/about/' and request.path != '/contact/' and request.path != '/property_agent/' and request.path != '/profile/' %}
         <div class="container-fluid bg-primary mb-5 wow fadeIn" data-wow-delay="0.1s" style="padding: 35px;">
             <div class="container">
                 <form method="GET" action="{% url 'search_courts' %}">
@@ -327,6 +328,7 @@
                 </form>
             </div>
         </div>
+        {% endif %}
         <!-- Search End -->
 
         {% block home %}{% endblock %} 
