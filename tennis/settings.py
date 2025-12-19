@@ -142,4 +142,14 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.ngrok-free.app",
 ]
 
+# Message tags configuration for toast notifications
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'info',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'error',
+}
+
 

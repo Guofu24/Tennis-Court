@@ -4,14 +4,6 @@
 <div class="container">
     <h1 class="mt-4 text-center text-primary">Manage Users</h1>
 
-    {% if messages %}
-    <div class="mt-2">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
     <!-- User Table -->
     <div class="table-responsive mt-3">
         <table class="table table-bordered table-striped align-middle">

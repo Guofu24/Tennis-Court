@@ -43,9 +43,9 @@ def auth_user(request):
                             login(request, user)
                             return redirect('home')
                         else:
-                            messages.info(request, 'User does not have admin privileges.')
+                            messages.error(request, 'User does not have admin privileges.')
                     else: 
-                        messages.info(request, 'UserName or password is incorrect!')
+                        messages.error(request, 'UserName or password is incorrect!')
 
     return render(request, "apps/login_user.html", {'register_form': register_form})
 
@@ -72,9 +72,9 @@ def auth_admin(request):
                         login(request, user)
                         return redirect('home')
                     else:
-                        messages.info(request, 'User does not have admin privileges.')
+                        messages.error(request, 'User does not have admin privileges.')
                 else: 
-                    messages.info(request, 'UserName or password is incorrect!')
+                    messages.error(request, 'UserName or password is incorrect!')
 
     return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin})
 
@@ -92,7 +92,7 @@ def request_password_reset(request):
                 # Tạo yêu cầu nếu chưa tồn tại
                 reset_request, created = PasswordResetRequest.objects.get_or_create(user=user)
                 if not created:
-                    messages.info(request, "You have already requested a password reset.")
+                    messages.warning(request, "You have already requested a password reset.")
                 else:
                     messages.success(request, "Your request has been sent to admin.")
             except CustomUser.DoesNotExist:
@@ -272,7 +272,7 @@ def checkout(request):
     if request.method == 'POST':
         if 'cancel' in request.POST:
             del request.session['temp_booking']
-            messages.info(request, "Booking cancelled.")
+            messages.warning(request, "Booking cancelled.")
             return redirect(f'/detail/?id={court.id}')
         elif 'pay' in request.POST:
             if user_balance >= court_price:

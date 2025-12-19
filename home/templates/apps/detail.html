@@ -1,12 +1,4 @@
-{% extends 'apps/master.html' %} {% block detail %} {% if messages %}
-<div class="container mt-4">
-    {% for message in messages %}
-    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}" role="alert">
-        {{ message }}
-    </div>
-    {% endfor %}
-</div>
-{% endif %} {% for court in tennis_courts %}
+{% extends 'apps/master.html' %} {% block detail %} {% for court in tennis_courts %}
 <div class="container mt-5 mb-5">
     <div class="card position-relative">
         <div class="dropdown position-absolute top-0 end-0 m-3">

@@ -8,9 +8,99 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="{% static 'app/css/style_form.css'%}">
      <title>Login and Register User</title>
+     <style>
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-notification {
+            min-width: 300px;
+            max-width: 400px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast-notification::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            animation: progress 5s linear forwards;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        @keyframes progress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        .toast-notification.toast-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .toast-notification.toast-error {
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
+            color: white;
+        }
+
+        .toast-notification.toast-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: #212529;
+        }
+
+        .toast-notification.toast-info {
+            background: linear-gradient(135deg, #17a2b8, #6f42c1);
+            color: white;
+        }
+
+        .toast-icon { font-size: 24px; flex-shrink: 0; }
+        .toast-content { flex: 1; }
+        .toast-title { font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+        .toast-message { font-size: 13px; opacity: 0.9; }
+        .toast-close {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+        .toast-close:hover { opacity: 1; }
+     </style>
 </head>
 
 <body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <div class="container" id="container" style="width: 1200px; height: 800px;">
         <!-- Form đăng ký -->
@@ -167,6 +257,62 @@
     </div>
 
     <script src="{% static 'app/js/script.js'%}"></script>
+    <script>
+        // Toast Notification System
+        function showToast(type, title, message, duration = 5000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-notification toast-${type}`;
+            
+            const icons = {
+                success: '<i class="fas fa-check-circle toast-icon"></i>',
+                error: '<i class="fas fa-times-circle toast-icon"></i>',
+                warning: '<i class="fas fa-exclamation-triangle toast-icon"></i>',
+                info: '<i class="fas fa-info-circle toast-icon"></i>'
+            };
+            
+            toast.innerHTML = `
+                ${icons[type] || icons.info}
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="closeToast(this)">&times;</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.animation = 'slideOut 0.3s ease-out forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+        
+        function closeToast(button) {
+            const toast = button.closest('.toast-notification');
+            toast.style.animation = 'slideOut 0.3s ease-out forwards';
+            setTimeout(() => toast.remove(), 300);
+        }
+
+        // Show Django messages as toasts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        showToast('success', 'Thành công!', '{{ message|escapejs }}');
+                    {% elif message.tags == 'error' %}
+                        showToast('error', 'Lỗi!', '{{ message|escapejs }}');
+                    {% elif message.tags == 'warning' %}
+                        showToast('warning', 'Cảnh báo!', '{{ message|escapejs }}');
+                    {% else %}
+                        showToast('info', 'Thông báo', '{{ message|escapejs }}');
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        });
+    </script>
 </body>
 
 </html>
