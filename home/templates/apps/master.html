@@ -68,12 +68,13 @@
         /* Toast Notification Styles */
         .toast-container {
             position: fixed;
-            top: 20px;
+            top: 100px;
             right: 20px;
-            z-index: 9999;
+            z-index: 99999;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            pointer-events: none;
         }
 
         .toast-notification {
@@ -88,6 +89,7 @@
             animation: slideIn 0.3s ease-out;
             position: relative;
             overflow: hidden;
+            pointer-events: auto;
         }
 
         .toast-notification::before {
