@@ -34,8 +34,22 @@ def auth_user(request):
 
         elif 'login' in request.POST:
                 if request.method == 'POST':
-                    username = request.POST.get('userName')
-                    password = request.POST.get('userPass')
+                    username = request.POST.get('userName', '').strip()
+                    password = request.POST.get('userPass', '')
+                    
+                    # Validate input
+                    if not username:
+                        messages.error(request, 'Vui lòng nhập tên đăng nhập.')
+                        return render(request, "apps/login_user.html", {'register_form': register_form})
+                    
+                    if not password:
+                        messages.error(request, 'Vui lòng nhập mật khẩu.')
+                        return render(request, "apps/login_user.html", {'register_form': register_form})
+                    
+                    if len(username) < 3:
+                        messages.error(request, 'Tên đăng nhập phải có ít nhất 3 ký tự.')
+                        return render(request, "apps/login_user.html", {'register_form': register_form})
+                    
                     user = authenticate(request, username=username, password=password)
                     
                     if user is not None:
@@ -43,9 +57,9 @@ def auth_user(request):
                             login(request, user)
                             return redirect('home')
                         else:
-                            messages.error(request, 'User does not have admin privileges.')
+                            messages.error(request, 'Tài khoản này không có quyền user.')
                     else: 
-                        messages.error(request, 'UserName or password is incorrect!')
+                        messages.error(request, 'Tên đăng nhập hoặc mật khẩu không đúng!')
 
     return render(request, "apps/login_user.html", {'register_form': register_form})
 
@@ -63,8 +77,22 @@ def auth_admin(request):
 
         elif 'login' in request.POST:
             if request.method == 'POST':
-                username = request.POST.get('adminName')
-                password = request.POST.get('adminPass')
+                username = request.POST.get('adminName', '').strip()
+                password = request.POST.get('adminPass', '')
+                
+                # Validate input
+                if not username:
+                    messages.error(request, 'Vui lòng nhập tên đăng nhập.')
+                    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin})
+                
+                if not password:
+                    messages.error(request, 'Vui lòng nhập mật khẩu.')
+                    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin})
+                
+                if len(username) < 3:
+                    messages.error(request, 'Tên đăng nhập phải có ít nhất 3 ký tự.')
+                    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin})
+                
                 user = authenticate(request, username=username, password=password)
                 
                 if user is not None:
@@ -72,9 +100,9 @@ def auth_admin(request):
                         login(request, user)
                         return redirect('home')
                     else:
-                        messages.error(request, 'User does not have admin privileges.')
+                        messages.error(request, 'Tài khoản này không có quyền admin.')
                 else: 
-                    messages.error(request, 'UserName or password is incorrect!')
+                    messages.error(request, 'Tên đăng nhập hoặc mật khẩu không đúng!')
 
     return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin})
 
@@ -340,14 +368,42 @@ def booking_success(request):
 @login_required
 def top_up(request):
     if request.method == 'POST':
-        bank = request.POST.get('bank')
-        wallet = request.POST.get('wallet')
-        account_name = request.POST.get('account_name')
-        password = request.POST.get('password')
-        top_up_amount = float(request.POST.get('amount'))
-        if top_up_amount <= 0:
-            messages.error(request, "Please enter a valid amount to deposit.")
+        bank = request.POST.get('bank', '').strip()
+        wallet = request.POST.get('wallet', '').strip()
+        account_name = request.POST.get('account_name', '').strip()
+        password = request.POST.get('password', '').strip()
+        amount_str = request.POST.get('amount', '').strip()
+        
+        # Validate required fields
+        errors = []
+        
+        if not bank and not wallet:
+            errors.append("Vui lòng chọn ngân hàng hoặc ví điện tử.")
+        
+        if not account_name:
+            errors.append("Vui lòng nhập tên tài khoản.")
+        elif len(account_name) < 2:
+            errors.append("Tên tài khoản phải có ít nhất 2 ký tự.")
+        
+        if not password:
+            errors.append("Vui lòng nhập mật khẩu.")
+        
+        # Validate amount
+        try:
+            top_up_amount = float(amount_str)
+            if top_up_amount <= 0:
+                errors.append("Số tiền nạp phải lớn hơn 0.")
+            if top_up_amount > 1000000:
+                errors.append("Số tiền nạp không được quá 1,000,000.")
+        except (ValueError, TypeError):
+            errors.append("Số tiền không hợp lệ.")
+            top_up_amount = 0
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
             return redirect('top_up')
+        
         request.user.balance += top_up_amount
         request.user.save()
         TransactionHistory.objects.create(
@@ -356,7 +412,7 @@ def top_up(request):
             amount=top_up_amount
         )
 
-        messages.success(request, f"Successfully topped up ${top_up_amount}. Your new balance is ${request.user.balance}.")
+        messages.success(request, f"Nạp tiền thành công ${top_up_amount}. Số dư hiện tại: ${request.user.balance}.")
         return redirect('property_list')
 
     return render(request, 'apps/top_up.html')
@@ -398,12 +454,93 @@ def transaction_history(request):
     return render(request, 'apps/transaction_history.html', {'transactions': transactions})
 
 
+def validate_profile_data(full_name, email, phone, address, dob):
+    """Validate profile data and return errors"""
+    import re
+    from datetime import date
+    errors = []
+    
+    # Validate full name
+    if full_name:
+        if len(full_name) < 2:
+            errors.append('Họ tên phải có ít nhất 2 ký tự.')
+        if len(full_name) > 100:
+            errors.append('Họ tên không được quá 100 ký tự.')
+        if not re.match(r'^[\u00C0-\u024F\u1E00-\u1EFFa-zA-Z\s\-\']+$', full_name):
+            errors.append('Họ tên chỉ được chứa chữ cái và khoảng trắng.')
+    
+    # Validate email
+    if email:
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            errors.append('Email không hợp lệ.')
+    
+    # Validate phone
+    if phone:
+        cleaned_phone = re.sub(r'[\s\-\(\)]', '', phone)
+        if not re.match(r'^\+?\d{10,15}$', cleaned_phone):
+            errors.append('Số điện thoại phải có 10-15 chữ số.')
+    
+    # Validate address
+    if address:
+        if len(address) < 5:
+            errors.append('Địa chỉ phải có ít nhất 5 ký tự.')
+        if len(address) > 255:
+            errors.append('Địa chỉ không được quá 255 ký tự.')
+    
+    # Validate date of birth
+    if dob:
+        try:
+            from datetime import datetime
+            if isinstance(dob, str):
+                dob_date = datetime.strptime(dob, '%Y-%m-%d').date()
+            else:
+                dob_date = dob
+            today = date.today()
+            age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+            if dob_date > today:
+                errors.append('Ngày sinh không thể ở tương lai.')
+            if age < 13:
+                errors.append('Bạn phải ít nhất 13 tuổi.')
+            if age > 120:
+                errors.append('Ngày sinh không hợp lệ.')
+        except ValueError:
+            errors.append('Định dạng ngày sinh không hợp lệ.')
+    
+    return errors
+
+
 @login_required
 def edit_profile(request):
         if request.method == 'POST':
             user = request.user
-            # Parse full_name into first_name and last_name
+            
+            # Get form data
             full_name = request.POST.get('full_name', '').strip()
+            email = request.POST.get('email', '').strip()
+            phone = request.POST.get('phone', '').strip()
+            address = request.POST.get('address', '').strip()
+            dob = request.POST.get('dob', '').strip()
+            gender = request.POST.get('gender', '').strip()
+            
+            # Validate data
+            errors = validate_profile_data(full_name, email, phone, address, dob)
+            
+            # Check if email is already used by another user
+            if email and email != user.email:
+                from .models import CustomUser
+                if CustomUser.objects.filter(email=email).exclude(userID=user.userID).exists():
+                    errors.append('Email đã được sử dụng bởi người dùng khác.')
+            
+            # Validate gender
+            if gender and gender not in ['Male', 'Female', 'Other', '']:
+                errors.append('Giới tính không hợp lệ.')
+            
+            if errors:
+                for error in errors:
+                    messages.error(request, error)
+                return render(request, 'apps/user_profile.html', {'user': request.user, 'balance': user.balance})
+            
+            # Parse full_name into first_name and last_name
             if full_name:
                 name_parts = full_name.split()
                 if len(name_parts) >= 2:
@@ -414,20 +551,21 @@ def edit_profile(request):
                     user.first_name = full_name
                     user.last_name = ''
             
-            user.email = request.POST.get('email', user.email)
-            user.phone = request.POST.get('phone', user.phone)
-            user.address = request.POST.get('address', user.address)
-            
-            # Handle date of birth
-            dob = request.POST.get('dob')
+            if email:
+                user.email = email
+            if phone:
+                user.phone = phone
+            if address:
+                user.address = address
             if dob:
                 user.dob = dob
-            
-            user.gender = request.POST.get('gender', user.gender)
+            if gender:
+                user.gender = gender
+                
             if request.FILES.get('photo'):
                 user.photo = request.FILES['photo']
             user.save()
-            messages.success(request, 'Profile updated successfully!')
+            messages.success(request, 'Cập nhật thông tin thành công!')
             return redirect('user_profile')
         return render(request, 'apps/user_profile.html', {'user': request.user})
 
