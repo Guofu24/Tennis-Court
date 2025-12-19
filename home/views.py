@@ -466,35 +466,42 @@ def validate_profile_data(full_name, email, phone, address, dob):
     from datetime import date
     errors = []
     
-    # Validate full name
-    if full_name:
-        if len(full_name) < 2:
-            errors.append('Họ tên phải có ít nhất 2 ký tự.')
-        if len(full_name) > 100:
-            errors.append('Họ tên không được quá 100 ký tự.')
-        if not re.match(r'^[\u00C0-\u024F\u1E00-\u1EFFa-zA-Z\s\-\']+$', full_name):
-            errors.append('Họ tên chỉ được chứa chữ cái và khoảng trắng.')
+    # Validate full name (required)
+    if not full_name:
+        errors.append('Vui lòng nhập họ tên.')
+    elif len(full_name) < 2:
+        errors.append('Họ tên phải có ít nhất 2 ký tự.')
+    elif len(full_name) > 100:
+        errors.append('Họ tên không được quá 100 ký tự.')
+    elif not re.match(r'^[\u00C0-\u024F\u1E00-\u1EFFa-zA-Z\s\-\']+$', full_name):
+        errors.append('Họ tên chỉ được chứa chữ cái và khoảng trắng.')
     
-    # Validate email
-    if email:
-        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-            errors.append('Email không hợp lệ.')
+    # Validate email (required)
+    if not email:
+        errors.append('Vui lòng nhập email.')
+    elif not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+        errors.append('Email không hợp lệ.')
     
-    # Validate phone
-    if phone:
+    # Validate phone (required and must be valid)
+    if not phone:
+        errors.append('Vui lòng nhập số điện thoại.')
+    else:
         cleaned_phone = re.sub(r'[\s\-\(\)]', '', phone)
         if not re.match(r'^\+?\d{10,15}$', cleaned_phone):
             errors.append('Số điện thoại phải có 10-15 chữ số.')
     
-    # Validate address
-    if address:
-        if len(address) < 5:
-            errors.append('Địa chỉ phải có ít nhất 5 ký tự.')
-        if len(address) > 255:
-            errors.append('Địa chỉ không được quá 255 ký tự.')
+    # Validate address (required)
+    if not address:
+        errors.append('Vui lòng nhập địa chỉ.')
+    elif len(address) < 5:
+        errors.append('Địa chỉ phải có ít nhất 5 ký tự.')
+    elif len(address) > 255:
+        errors.append('Địa chỉ không được quá 255 ký tự.')
     
-    # Validate date of birth
-    if dob:
+    # Validate date of birth (required)
+    if not dob:
+        errors.append('Vui lòng nhập ngày sinh.')
+    else:
         try:
             from datetime import datetime
             if isinstance(dob, str):
@@ -537,36 +544,37 @@ def edit_profile(request):
                 if CustomUser.objects.filter(email=email).exclude(userID=user.userID).exists():
                     errors.append('Email đã được sử dụng bởi người dùng khác.')
             
-            # Validate gender
-            if gender and gender not in ['Male', 'Female', 'Other', '']:
+            # Validate gender (required)
+            if not gender:
+                errors.append('Vui lòng chọn giới tính.')
+            elif gender not in ['Male', 'Female', 'Other']:
                 errors.append('Giới tính không hợp lệ.')
             
             if errors:
                 for error in errors:
                     messages.error(request, error)
-                return render(request, 'apps/user_profile.html', {'user': request.user, 'balance': user.balance})
+                return redirect('user_profile')
             
             # Parse full_name into first_name and last_name
-            if full_name:
-                name_parts = full_name.split()
-                if len(name_parts) >= 2:
-                    # Vietnamese name: last word is first_name (tên), rest is last_name (họ)
-                    user.first_name = name_parts[-1]  # Tên (ví dụ: Phú)
-                    user.last_name = ' '.join(name_parts[:-1])  # Họ (ví dụ: Nguyễn Quốc)
-                else:
-                    user.first_name = full_name
-                    user.last_name = ''
+            # Parse full_name into first_name and last_name (Vietnamese style)
+            name_parts = full_name.split() if full_name else []
+            if len(name_parts) >= 2:
+                # Vietnamese name: last word is first_name (tên), rest is last_name (họ)
+                user.first_name = name_parts[-1]  # Tên (ví dụ: Phú)
+                user.last_name = ' '.join(name_parts[:-1])  # Họ (ví dụ: Nguyễn Quốc)
+            elif len(name_parts) == 1:
+                user.first_name = full_name
+                user.last_name = ''
+            else:
+                user.first_name = ''
+                user.last_name = ''
             
-            if email:
-                user.email = email
-            if phone:
-                user.phone = phone
-            if address:
-                user.address = address
-            if dob:
-                user.dob = dob
-            if gender:
-                user.gender = gender
+            # Update all fields (allow empty values to clear fields)
+            user.email = email
+            user.phone = phone
+            user.address = address
+            user.dob = dob if dob else None
+            user.gender = gender if gender else None
                 
             if request.FILES.get('photo'):
                 user.photo = request.FILES['photo']

@@ -161,6 +161,10 @@
             field.disabled = true;
         });
 
+        // Clear all error messages
+        document.querySelectorAll('.field-error').forEach(el => el.remove());
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
         document.getElementById('photo-label').style.display = 'none';
         document.getElementById('photo').style.display = 'none';
 
@@ -168,5 +172,143 @@
         document.getElementById('save-btn').style.display = 'none';
         document.getElementById('cancel-btn').style.display = 'none';
     }
+
+    function showFieldError(field, message) {
+        // Remove existing error
+        const existingError = field.parentNode.querySelector('.field-error');
+        if (existingError) existingError.remove();
+        
+        // Add error class
+        field.classList.add('is-invalid');
+        
+        // Create error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'field-error text-danger small mt-1';
+        errorDiv.textContent = message;
+        field.parentNode.appendChild(errorDiv);
+    }
+
+    function clearFieldError(field) {
+        field.classList.remove('is-invalid');
+        const existingError = field.parentNode.querySelector('.field-error');
+        if (existingError) existingError.remove();
+    }
+
+    function validateForm() {
+        let isValid = true;
+        
+        // Validate Full Name
+        const fullName = document.getElementById('full_name');
+        if (!fullName.value.trim()) {
+            showFieldError(fullName, 'Vui lòng nhập họ tên.');
+            isValid = false;
+        } else if (fullName.value.trim().length < 2) {
+            showFieldError(fullName, 'Họ tên phải có ít nhất 2 ký tự.');
+            isValid = false;
+        } else {
+            clearFieldError(fullName);
+        }
+        
+        // Validate Email
+        const email = document.getElementById('email');
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!email.value.trim()) {
+            showFieldError(email, 'Vui lòng nhập email.');
+            isValid = false;
+        } else if (!emailRegex.test(email.value.trim())) {
+            showFieldError(email, 'Email không hợp lệ.');
+            isValid = false;
+        } else {
+            clearFieldError(email);
+        }
+        
+        // Validate Phone
+        const phone = document.getElementById('phone');
+        const phoneRegex = /^\+?\d{10,15}$/;
+        const cleanedPhone = phone.value.replace(/[\s\-\(\)]/g, '');
+        if (!phone.value.trim()) {
+            showFieldError(phone, 'Vui lòng nhập số điện thoại.');
+            isValid = false;
+        } else if (!phoneRegex.test(cleanedPhone)) {
+            showFieldError(phone, 'Số điện thoại phải có 10-15 chữ số.');
+            isValid = false;
+        } else {
+            clearFieldError(phone);
+        }
+        
+        // Validate Date of Birth
+        const dob = document.getElementById('dob');
+        if (!dob.value.trim()) {
+            showFieldError(dob, 'Vui lòng nhập ngày sinh.');
+            isValid = false;
+        } else {
+            const dobDate = new Date(dob.value);
+            const today = new Date();
+            const age = today.getFullYear() - dobDate.getFullYear();
+            if (dobDate > today) {
+                showFieldError(dob, 'Ngày sinh không thể ở tương lai.');
+                isValid = false;
+            } else if (age < 13) {
+                showFieldError(dob, 'Bạn phải ít nhất 13 tuổi.');
+                isValid = false;
+            } else if (age > 120) {
+                showFieldError(dob, 'Ngày sinh không hợp lệ.');
+                isValid = false;
+            } else {
+                clearFieldError(dob);
+            }
+        }
+        
+        // Validate Gender
+        const gender = document.getElementById('gender');
+        if (!gender.value) {
+            showFieldError(gender, 'Vui lòng chọn giới tính.');
+            isValid = false;
+        } else {
+            clearFieldError(gender);
+        }
+        
+        // Validate Address
+        const address = document.querySelector('input[name="address"]');
+        if (!address.value.trim()) {
+            showFieldError(address, 'Vui lòng nhập địa chỉ.');
+            isValid = false;
+        } else if (address.value.trim().length < 5) {
+            showFieldError(address, 'Địa chỉ phải có ít nhất 5 ký tự.');
+            isValid = false;
+        } else {
+            clearFieldError(address);
+        }
+        
+        return isValid;
+    }
+
+    // Add form submit handler
+    document.getElementById('profile-form').addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+        }
+    });
+
+    // Real-time validation on input
+    document.querySelectorAll('#profile-form input, #profile-form select').forEach(field => {
+        field.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateForm();
+            }
+        });
+    });
 </script>
+
+<style>
+    .is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    .field-error {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+</style>
 {% endblock %}

@@ -94,6 +94,11 @@ class CustomUser(AbstractUser):
     def is_user(self):
         return self.role == 'user'
 
+    def get_full_name(self):
+        """Return Vietnamese-style full name: last_name (họ) + first_name (tên)"""
+        full_name = '%s %s' % (self.last_name, self.first_name)
+        return full_name.strip()
+
     @property
     def PhotoURL(self):
         try:
