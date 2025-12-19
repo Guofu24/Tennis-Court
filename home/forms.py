@@ -128,6 +128,13 @@ class UserProfileForm(forms.ModelForm):
 
 # Form đăng ký người dùng
 class UserRegistrationForm(UserCreationForm):
+    GENDER_CHOICES = [
+        ('', '-- Chọn giới tính --'),
+        ('Male', 'Nam'),
+        ('Female', 'Nữ'),
+        ('Other', 'Khác'),
+    ]
+    
     dob = forms.DateField(
         input_formats=['%d/%m/%Y', '%Y-%m-%d'],
         widget=forms.DateInput(attrs={'placeholder': 'DD/MM/YYYY', 'class': 'form-control'}),
@@ -158,6 +165,11 @@ class UserRegistrationForm(UserCreationForm):
         validators=[validate_citizen_id],
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'CCCD/CMND'})
     )
+    gender = forms.ChoiceField(
+        choices=GENDER_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     
     class Meta:
         model = CustomUser
@@ -175,6 +187,12 @@ class UserRegistrationForm(UserCreationForm):
             'password2': 'Repeat Password',
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
+    
+    def clean_gender(self):
+        value = self.cleaned_data.get('gender')
+        if not value:
+            raise ValidationError('Vui lòng chọn giới tính.')
+        return value
     
     def clean_username(self):
         value = self.cleaned_data.get('username')
@@ -209,6 +227,13 @@ class UserRegistrationForm(UserCreationForm):
 
 # Form đăng ký quản trị viên
 class AdminRegistrationForm(UserCreationForm):
+    GENDER_CHOICES = [
+        ('', '-- Chọn giới tính --'),
+        ('Male', 'Nam'),
+        ('Female', 'Nữ'),
+        ('Other', 'Khác'),
+    ]
+    
     dob = forms.DateField(
         input_formats=['%d/%m/%Y', '%Y-%m-%d'], 
         widget=forms.DateInput(attrs={'placeholder': 'DD/MM/YYYY', 'class': 'form-control'}),
@@ -234,6 +259,11 @@ class AdminRegistrationForm(UserCreationForm):
         validators=[validate_address],
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Địa chỉ'})
     )
+    gender = forms.ChoiceField(
+        choices=GENDER_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     
     class Meta:
         model = CustomUser
@@ -250,6 +280,12 @@ class AdminRegistrationForm(UserCreationForm):
             'password1': 'Password',
             'password2': 'Repeat Password',
         }
+
+    def clean_gender(self):
+        value = self.cleaned_data.get('gender')
+        if not value:
+            raise ValidationError('Vui lòng chọn giới tính.')
+        return value
 
     def clean_username(self):
         value = self.cleaned_data.get('username')

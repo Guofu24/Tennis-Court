@@ -22,15 +22,18 @@ import os
 
 def auth_user(request):
     register_form = UserRegistrationForm()
+    show_register = False  # Flag to show register form on errors
 
     if request.method == 'POST':
         if 'register' in request.POST:
             register_form = UserRegistrationForm(request.POST)
             if register_form.is_valid():
                 user = register_form.save()  
-                login(request, user)  
-                messages.success(request, 'Account created successfully!')
-                return redirect('home') 
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')  
+                messages.success(request, 'Tạo tài khoản thành công!')
+                return redirect('home')
+            else:
+                show_register = True  # Keep register form open on validation errors 
 
         elif 'login' in request.POST:
                 if request.method == 'POST':
@@ -61,19 +64,22 @@ def auth_user(request):
                     else: 
                         messages.error(request, 'Tên đăng nhập hoặc mật khẩu không đúng!')
 
-    return render(request, "apps/login_user.html", {'register_form': register_form})
+    return render(request, "apps/login_user.html", {'register_form': register_form, 'show_register': show_register})
 
 def auth_admin(request):
     register_form_admin = AdminRegistrationForm()
+    show_register = False  # Flag to show register form on errors
 
     if request.method == 'POST':
         if 'register' in request.POST:
             register_form_admin = AdminRegistrationForm(request.POST)
             if register_form_admin.is_valid():
                 user = register_form_admin.save()  
-                login(request, user)  
-                messages.success(request, 'Account created successfully!')
-                return redirect('home') 
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')  
+                messages.success(request, 'Tạo tài khoản thành công!')
+                return redirect('home')
+            else:
+                show_register = True  # Keep register form open on validation errors
 
         elif 'login' in request.POST:
             if request.method == 'POST':
@@ -83,15 +89,15 @@ def auth_admin(request):
                 # Validate input
                 if not username:
                     messages.error(request, 'Vui lòng nhập tên đăng nhập.')
-                    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin})
+                    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin, 'show_register': show_register})
                 
                 if not password:
                     messages.error(request, 'Vui lòng nhập mật khẩu.')
-                    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin})
+                    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin, 'show_register': show_register})
                 
                 if len(username) < 3:
                     messages.error(request, 'Tên đăng nhập phải có ít nhất 3 ký tự.')
-                    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin})
+                    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin, 'show_register': show_register})
                 
                 user = authenticate(request, username=username, password=password)
                 
@@ -104,7 +110,7 @@ def auth_admin(request):
                 else: 
                     messages.error(request, 'Tên đăng nhập hoặc mật khẩu không đúng!')
 
-    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin})
+    return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin, 'show_register': show_register})
 
 def logoutPage(request):
     logout(request)
