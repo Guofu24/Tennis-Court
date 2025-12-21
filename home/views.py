@@ -6,7 +6,9 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from .forms import *
 from .models import *
-from django.db.models import Avg, Count
+from .activity_tracker import log_activity, get_analytics_data, get_recent_activities, get_online_users_count, get_user_activity_summary
+from django.db.models import Avg, Count, Sum
+from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.utils.timezone import now
 from reportlab.lib.units import inch
@@ -19,6 +21,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.forms import SetPasswordForm
 from django.core.paginator import Paginator
 import os
+from datetime import timedelta
 
 def auth_user(request):
     register_form = UserRegistrationForm()
@@ -30,6 +33,11 @@ def auth_user(request):
             if register_form.is_valid():
                 user = register_form.save()  
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')  
+                # Ghi lại hoạt động đăng ký
+                log_activity(request, 'register', f'User mới đăng ký: {user.username}', {
+                    'user_id': user.userID,
+                    'email': user.email
+                })
                 messages.success(request, 'Tạo tài khoản thành công!')
                 return redirect('home')
             else:
@@ -58,6 +66,8 @@ def auth_user(request):
                     if user is not None:
                         if user.is_user():
                             login(request, user)
+                            # Ghi lại hoạt động đăng nhập
+                            log_activity(request, 'login', f'User {username} đã đăng nhập')
                             return redirect('home')
                         else:
                             messages.error(request, 'Tài khoản này không có quyền user.')
@@ -113,6 +123,8 @@ def auth_admin(request):
     return render(request, "apps/login_admin.html", {'register_form_admin': register_form_admin, 'show_register': show_register})
 
 def logoutPage(request):
+    if request.user.is_authenticated:
+        log_activity(request, 'logout', f'User {request.user.username} đã đăng xuất')
     logout(request)
     return redirect('home')
 
@@ -354,6 +366,16 @@ def checkout(request):
     play_time = temp_booking['play_time']
     court_price = court.price
     user_balance = request.user.balance
+    
+    # Các phương thức thanh toán có sẵn
+    payment_methods = [
+        {'id': 'balance', 'name': 'Account Balance', 'icon': 'fa-wallet', 'description': f'Current balance: ${user_balance:.2f}'},
+        {'id': 'credit_card', 'name': 'Credit Card', 'icon': 'fa-credit-card', 'description': 'Visa, Mastercard, JCB'},
+        {'id': 'momo', 'name': 'Momo Wallet', 'icon': 'fa-mobile-alt', 'description': 'Pay with Momo e-wallet'},
+        {'id': 'bank_transfer', 'name': 'Bank Transfer', 'icon': 'fa-university', 'description': 'Direct bank transfer'},
+        {'id': 'vnpay', 'name': 'VNPay', 'icon': 'fa-qrcode', 'description': 'Pay with VNPay QR'},
+        {'id': 'zalopay', 'name': 'ZaloPay', 'icon': 'fa-money-bill-wave', 'description': 'Pay with ZaloPay'},
+    ]
 
     if request.method == 'POST':
         if 'cancel' in request.POST:
@@ -361,10 +383,71 @@ def checkout(request):
             messages.warning(request, "Booking cancelled.")
             return redirect(f'/detail/?id={court.id}')
         elif 'pay' in request.POST:
-            if user_balance >= court_price:
-                request.user.balance -= court_price
-                request.user.save()
-
+            payment_method = request.POST.get('payment_method', 'balance')
+            card_number = request.POST.get('card_number', '')
+            card_last_four = card_number[-4:] if len(card_number) >= 4 else None
+            
+            # Xử lý thanh toán theo từng phương thức
+            payment_success = False
+            transaction_id = None
+            
+            if payment_method == 'balance':
+                # Thanh toán bằng số dư tài khoản
+                if user_balance >= court_price:
+                    request.user.balance -= court_price
+                    request.user.save()
+                    payment_success = True
+                else:
+                    messages.error(request, "Insufficient balance. Please top up your account or choose another payment method.")
+                    return redirect('checkout')
+            
+            elif payment_method == 'credit_card':
+                # Mô phỏng thanh toán thẻ tín dụng
+                card_number = request.POST.get('card_number', '').replace(' ', '')
+                card_expiry = request.POST.get('card_expiry', '')
+                card_cvv = request.POST.get('card_cvv', '')
+                
+                if not card_number or len(card_number) < 13:
+                    messages.error(request, "Invalid card number.")
+                    return redirect('checkout')
+                if not card_expiry:
+                    messages.error(request, "Please enter card expiry date.")
+                    return redirect('checkout')
+                if not card_cvv or len(card_cvv) < 3:
+                    messages.error(request, "Invalid CVV.")
+                    return redirect('checkout')
+                
+                # Giả lập xử lý thanh toán thẻ (trong thực tế sẽ gọi API gateway)
+                import uuid
+                transaction_id = f"CC-{uuid.uuid4().hex[:12].upper()}"
+                card_last_four = card_number[-4:]
+                payment_success = True
+            
+            elif payment_method == 'momo':
+                # Mô phỏng thanh toán Momo
+                import uuid
+                transaction_id = f"MOMO-{uuid.uuid4().hex[:12].upper()}"
+                payment_success = True
+            
+            elif payment_method == 'bank_transfer':
+                # Mô phỏng chuyển khoản ngân hàng
+                import uuid
+                transaction_id = f"BANK-{uuid.uuid4().hex[:12].upper()}"
+                payment_success = True
+                
+            elif payment_method == 'vnpay':
+                # Mô phỏng thanh toán VNPay
+                import uuid
+                transaction_id = f"VNPAY-{uuid.uuid4().hex[:12].upper()}"
+                payment_success = True
+                
+            elif payment_method == 'zalopay':
+                # Mô phỏng thanh toán ZaloPay
+                import uuid
+                transaction_id = f"ZALO-{uuid.uuid4().hex[:12].upper()}"
+                payment_success = True
+            
+            if payment_success:
                 booking = Booking.objects.create(
                     tennis_court=court,
                     user=request.user,
@@ -375,12 +458,16 @@ def checkout(request):
                     user=request.user,
                     booking=booking,
                     amount=court_price,
-                    status='Paid'
+                    status='Paid',
+                    payment_method=payment_method,
+                    card_last_four=card_last_four,
+                    transaction_id=transaction_id
                 )
 
                 TransactionHistory.objects.create(
                     user=request.user,
                     transaction_type='Payment',
+                    payment_method=payment_method,
                     amount=court_price
                 )
                 system_account = SystemAccount.objects.first()
@@ -391,18 +478,30 @@ def checkout(request):
                     amount=court.price,
                     transaction_type='Payment'
                 )
+                
+                # Ghi lại hoạt động đặt sân và thanh toán
+                log_activity(request, 'booking', f'Đặt sân {court.name} lúc {play_time}', {
+                    'court_id': court.id,
+                    'court_name': court.name,
+                    'play_time': play_time,
+                    'amount': court_price
+                })
+                log_activity(request, 'payment', f'Thanh toán {court_price} cho sân {court.name} via {payment_method}', {
+                    'invoice_id': invoice.id,
+                    'amount': court_price,
+                    'payment_method': payment_method,
+                    'transaction_id': transaction_id
+                })
+                
                 del request.session['temp_booking']
-                # messages.success(request, "Payment successful! Your booking is confirmed.")
                 return redirect('booking_success')
-            else:
-                messages.error(request, "Insufficient balance. Please top up your account.")
-                return redirect('top_up')
 
     return render(request, 'apps/checkout.html', {
         'court': court,
         'play_time': play_time,
         'user_balance': user_balance,
-        'court_price': court_price
+        'court_price': court_price,
+        'payment_methods': payment_methods
     })
 
 
@@ -425,55 +524,216 @@ def booking_success(request):
 
 @login_required
 def top_up(request):
+    # Danh sách ngân hàng và ví điện tử Việt Nam
+    banks = [
+        {'id': 'vcb', 'name': 'Vietcombank', 'logo': 'vcb'},
+        {'id': 'tcb', 'name': 'Techcombank', 'logo': 'tcb'},
+        {'id': 'mb', 'name': 'MB Bank', 'logo': 'mb'},
+        {'id': 'acb', 'name': 'ACB', 'logo': 'acb'},
+        {'id': 'bidv', 'name': 'BIDV', 'logo': 'bidv'},
+        {'id': 'vib', 'name': 'VIB', 'logo': 'vib'},
+        {'id': 'vpb', 'name': 'VPBank', 'logo': 'vpb'},
+        {'id': 'scb', 'name': 'Sacombank', 'logo': 'scb'},
+    ]
+    
+    wallets = [
+        {'id': 'momo', 'name': 'Momo', 'logo': 'momo'},
+        {'id': 'zalopay', 'name': 'ZaloPay', 'logo': 'zalopay'},
+        {'id': 'vnpay', 'name': 'VNPay', 'logo': 'vnpay'},
+        {'id': 'shopeepay', 'name': 'ShopeePay', 'logo': 'shopeepay'},
+    ]
+    
+    # Số tiền nhanh để chọn
+    quick_amounts = [50, 100, 200, 500, 1000, 2000]
+    
     if request.method == 'POST':
-        bank = request.POST.get('bank', '').strip()
-        wallet = request.POST.get('wallet', '').strip()
+        payment_type = request.POST.get('payment_type', '').strip()  # 'bank' hoặc 'wallet'
+        bank_id = request.POST.get('bank', '').strip()
+        wallet_id = request.POST.get('wallet', '').strip()
+        account_number = request.POST.get('account_number', '').strip()
         account_name = request.POST.get('account_name', '').strip()
+        card_number = request.POST.get('card_number', '').strip().replace(' ', '')
+        card_expiry = request.POST.get('card_expiry', '').strip()
+        card_cvv = request.POST.get('card_cvv', '').strip()
+        phone_number = request.POST.get('phone_number', '').strip()
+        otp_code = request.POST.get('otp_code', '').strip()
         password = request.POST.get('password', '').strip()
         amount_str = request.POST.get('amount', '').strip()
         
-        # Validate required fields
+        # Validation errors
         errors = []
         
-        if not bank and not wallet:
-            errors.append("Vui lòng chọn ngân hàng hoặc ví điện tử.")
+        # Validate payment type
+        if not payment_type:
+            errors.append("Vui lòng chọn phương thức thanh toán.")
+        elif payment_type == 'bank':
+            if not bank_id:
+                errors.append("Vui lòng chọn ngân hàng.")
+            
+            # Validate card number (13-19 digits)
+            if not card_number:
+                errors.append("Vui lòng nhập số thẻ.")
+            elif not card_number.isdigit():
+                errors.append("Số thẻ chỉ được chứa chữ số.")
+            elif len(card_number) < 13 or len(card_number) > 19:
+                errors.append("Số thẻ phải có từ 13-19 chữ số.")
+            else:
+                # Luhn algorithm validation (kiểm tra tính hợp lệ của số thẻ)
+                def luhn_check(card_num):
+                    def digits_of(n):
+                        return [int(d) for d in str(n)]
+                    digits = digits_of(card_num)
+                    odd_digits = digits[-1::-2]
+                    even_digits = digits[-2::-2]
+                    checksum = sum(odd_digits)
+                    for d in even_digits:
+                        checksum += sum(digits_of(d * 2))
+                    return checksum % 10 == 0
+                
+                if not luhn_check(card_number):
+                    errors.append("Số thẻ không hợp lệ (không đúng định dạng Luhn).")
+            
+            # Validate card expiry (MM/YY format)
+            if not card_expiry:
+                errors.append("Vui lòng nhập ngày hết hạn thẻ.")
+            else:
+                import re
+                if not re.match(r'^\d{2}/\d{2}$', card_expiry):
+                    errors.append("Ngày hết hạn phải theo định dạng MM/YY.")
+                else:
+                    month, year = card_expiry.split('/')
+                    month = int(month)
+                    year = int('20' + year)
+                    if month < 1 or month > 12:
+                        errors.append("Tháng hết hạn không hợp lệ (1-12).")
+                    else:
+                        from datetime import datetime
+                        current_date = datetime.now()
+                        if year < current_date.year or (year == current_date.year and month < current_date.month):
+                            errors.append("Thẻ đã hết hạn.")
+            
+            # Validate CVV (3-4 digits)
+            if not card_cvv:
+                errors.append("Vui lòng nhập mã CVV.")
+            elif not card_cvv.isdigit() or len(card_cvv) < 3 or len(card_cvv) > 4:
+                errors.append("Mã CVV phải có 3-4 chữ số.")
+                
+        elif payment_type == 'wallet':
+            if not wallet_id:
+                errors.append("Vui lòng chọn ví điện tử.")
+            
+            # Validate phone number for wallet
+            if not phone_number:
+                errors.append("Vui lòng nhập số điện thoại.")
+            else:
+                import re
+                # Validate Vietnamese phone number
+                phone_clean = re.sub(r'[\s\-\(\)]', '', phone_number)
+                if not re.match(r'^(0|\+84)(3|5|7|8|9)\d{8}$', phone_clean):
+                    errors.append("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam.")
+            
+            # Validate OTP (6 digits)
+            if not otp_code:
+                errors.append("Vui lòng nhập mã OTP.")
+            elif not otp_code.isdigit() or len(otp_code) != 6:
+                errors.append("Mã OTP phải có đúng 6 chữ số.")
         
+        # Validate account name
         if not account_name:
-            errors.append("Vui lòng nhập tên tài khoản.")
+            errors.append("Vui lòng nhập tên chủ tài khoản.")
         elif len(account_name) < 2:
-            errors.append("Tên tài khoản phải có ít nhất 2 ký tự.")
+            errors.append("Tên chủ tài khoản phải có ít nhất 2 ký tự.")
+        elif len(account_name) > 100:
+            errors.append("Tên chủ tài khoản không được quá 100 ký tự.")
+        else:
+            import re
+            # Only allow letters, spaces, and Vietnamese characters
+            if not re.match(r'^[\u00C0-\u024F\u1E00-\u1EFFa-zA-Z\s]+$', account_name):
+                errors.append("Tên chủ tài khoản chỉ được chứa chữ cái và khoảng trắng.")
         
+        # Validate password
         if not password:
-            errors.append("Vui lòng nhập mật khẩu.")
+            errors.append("Vui lòng nhập mật khẩu xác nhận.")
+        elif len(password) < 6:
+            errors.append("Mật khẩu phải có ít nhất 6 ký tự.")
         
         # Validate amount
-        try:
-            top_up_amount = float(amount_str)
-            if top_up_amount <= 0:
-                errors.append("Số tiền nạp phải lớn hơn 0.")
-            if top_up_amount > 1000000:
-                errors.append("Số tiền nạp không được quá 1,000,000.")
-        except (ValueError, TypeError):
-            errors.append("Số tiền không hợp lệ.")
-            top_up_amount = 0
+        top_up_amount = 0
+        if not amount_str:
+            errors.append("Vui lòng nhập số tiền nạp.")
+        else:
+            try:
+                top_up_amount = float(amount_str)
+                if top_up_amount <= 0:
+                    errors.append("Số tiền nạp phải lớn hơn 0.")
+                elif top_up_amount < 10:
+                    errors.append("Số tiền nạp tối thiểu là $10.")
+                elif top_up_amount > 10000:
+                    errors.append("Số tiền nạp tối đa là $10,000 mỗi lần.")
+                elif not (top_up_amount * 100).is_integer():
+                    # Only allow 2 decimal places
+                    errors.append("Số tiền chỉ được có tối đa 2 chữ số thập phân.")
+            except (ValueError, TypeError):
+                errors.append("Số tiền không hợp lệ. Vui lòng nhập số.")
+        
+        # Check daily limit
+        from datetime import datetime, timedelta
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_deposits = TransactionHistory.objects.filter(
+            user=request.user,
+            transaction_type='Deposit',
+            timestamp__gte=today_start
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        
+        if today_deposits + top_up_amount > 50000:
+            errors.append(f"Đã vượt quá hạn mức nạp tiền trong ngày ($50,000). Đã nạp hôm nay: ${today_deposits}.")
         
         if errors:
             for error in errors:
                 messages.error(request, error)
-            return redirect('top_up')
+            return render(request, 'apps/top_up.html', {
+                'banks': banks,
+                'wallets': wallets,
+                'quick_amounts': quick_amounts,
+                'form_data': request.POST
+            })
+        
+        # Process top-up
+        import uuid
+        transaction_id = f"TU-{uuid.uuid4().hex[:12].upper()}"
         
         request.user.balance += top_up_amount
         request.user.save()
+        
+        # Determine payment method for transaction history
+        payment_method = bank_id if payment_type == 'bank' else wallet_id
+        
         TransactionHistory.objects.create(
             user=request.user,
             transaction_type='Deposit',
+            payment_method=payment_method if payment_method in ['momo', 'zalopay', 'vnpay'] else 'bank_transfer',
             amount=top_up_amount
         )
+        
+        # Ghi lại hoạt động nạp tiền
+        log_activity(request, 'top_up', f'Nạp tiền ${top_up_amount}', {
+            'amount': top_up_amount,
+            'payment_type': payment_type,
+            'bank': bank_id,
+            'wallet': wallet_id,
+            'transaction_id': transaction_id,
+            'new_balance': request.user.balance
+        })
 
-        messages.success(request, f"Nạp tiền thành công ${top_up_amount}. Số dư hiện tại: ${request.user.balance}.")
+        messages.success(request, f"Nạp tiền thành công ${top_up_amount:.2f}! Mã giao dịch: {transaction_id}. Số dư hiện tại: ${request.user.balance:.2f}.")
         return redirect('property_list')
 
-    return render(request, 'apps/top_up.html')
+    return render(request, 'apps/top_up.html', {
+        'banks': banks,
+        'wallets': wallets,
+        'quick_amounts': quick_amounts,
+        'current_balance': request.user.balance
+    })
 
 
 @login_required
@@ -483,6 +743,8 @@ def profile(request):
         form = UserProfileForm(request.POST, instance=user)
         if form.is_valid():
             form.save()
+            # Ghi lại hoạt động cập nhật profile
+            log_activity(request, 'profile_update', 'Cập nhật thông tin cá nhân')
             messages.success(request, "Thông tin tài khoản đã được cập nhật thành công.")
             return redirect('profile')
     else:
@@ -772,6 +1034,12 @@ def report_court(request, court_id):
             report.court = court
             report.reporter = request.user
             report.save()
+            # Ghi lại hoạt động báo cáo
+            log_activity(request, 'report', f'Báo cáo sân {court.name}', {
+                'court_id': court_id,
+                'court_name': court.name,
+                'status': report.court_status
+            })
             return redirect(f'/detail/?id={court.id}')
     else:
         form = ReportForm()
@@ -908,6 +1176,12 @@ def add_review(request, court_id):
             review.user = user
             review.court = tennis_court
             review.save()
+            # Ghi lại hoạt động đánh giá
+            log_activity(request, 'review', f'Đánh giá sân {tennis_court.name}', {
+                'court_id': court_id,
+                'court_name': tennis_court.name,
+                'rating': review.rating
+            })
             messages.success(request, 'Rating succesfully!')
             return redirect(f'/detail/?id={tennis_court.id}')
     form = ReviewForm()
@@ -1008,3 +1282,144 @@ def google_login(request):
     """Redirect to Google OAuth login"""
     from allauth.socialaccount.providers.google.views import oauth2_login
     return oauth2_login(request)
+
+
+# ==================== ANALYTICS DASHBOARD ====================
+
+@login_required
+def analytics_dashboard(request):
+    """Trang thống kê hoạt động người dùng - chỉ admin được truy cập"""
+    if not request.user.is_admin():
+        messages.error(request, 'Bạn không có quyền truy cập trang này.')
+        return HttpResponseForbidden("Bạn không có quyền truy cập trang này.")
+    
+    # Lấy số ngày từ query params (mặc định 30 ngày)
+    days = int(request.GET.get('days', 30))
+    
+    # Lấy dữ liệu thống kê
+    analytics_data = get_analytics_data(days)
+    
+    # Hoạt động gần đây
+    recent_activities = get_recent_activities(50)
+    
+    # Số người online
+    online_users = get_online_users_count()
+    
+    # Thống kê người dùng
+    total_users = CustomUser.objects.count()
+    total_admins = CustomUser.objects.filter(role='admin').count()
+    total_regular_users = CustomUser.objects.filter(role='user').count()
+    
+    # Thống kê sân
+    total_courts = Tennis.objects.count()
+    available_courts = Tennis.objects.filter(status='Available').count()
+    repairing_courts = Tennis.objects.filter(status='Repairing').count()
+    
+    # Thống kê đặt sân theo ngày (7 ngày gần nhất)
+    today = timezone.now().date()
+    booking_chart_data = []
+    for i in range(6, -1, -1):
+        date = today - timedelta(days=i)
+        count = UserActivity.objects.filter(
+            activity_type='booking',
+            created_at__date=date
+        ).count()
+        booking_chart_data.append({
+            'date': date.strftime('%d/%m'),
+            'count': count
+        })
+    
+    # Thống kê đăng ký theo ngày (7 ngày gần nhất)
+    register_chart_data = []
+    for i in range(6, -1, -1):
+        date = today - timedelta(days=i)
+        count = CustomUser.objects.filter(date_joined__date=date).count()
+        register_chart_data.append({
+            'date': date.strftime('%d/%m'),
+            'count': count
+        })
+    
+    # Top người dùng hoạt động
+    from django.db.models import Count as DjangoCount
+    top_active_users = UserActivity.objects.filter(
+        user__isnull=False
+    ).values(
+        'user__username', 'user__userID'
+    ).annotate(
+        activity_count=DjangoCount('id')
+    ).order_by('-activity_count')[:10]
+    
+    context = {
+        'analytics_data': analytics_data,
+        'recent_activities': recent_activities,
+        'online_users': online_users,
+        'total_users': total_users,
+        'total_admins': total_admins,
+        'total_regular_users': total_regular_users,
+        'total_courts': total_courts,
+        'available_courts': available_courts,
+        'repairing_courts': repairing_courts,
+        'booking_chart_data': booking_chart_data,
+        'register_chart_data': register_chart_data,
+        'top_active_users': top_active_users,
+        'days': days,
+    }
+    
+    return render(request, 'apps/analytics.html', context)
+
+
+@login_required
+def analytics_api(request):
+    """API endpoint để lấy dữ liệu analytics (JSON)"""
+    if not request.user.is_admin():
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    days = int(request.GET.get('days', 30))
+    analytics_data = get_analytics_data(days)
+    
+    # Convert QuerySets to serializable format
+    response_data = {
+        'activity_stats': analytics_data['activity_stats'],
+        'daily_stats': [
+            {'date': str(item['date']), 'count': item['count']} 
+            for item in analytics_data['daily_stats']
+        ],
+        'device_stats': analytics_data['device_stats'],
+        'browser_stats': analytics_data['browser_stats'],
+        'active_sessions': analytics_data['active_sessions'],
+        'new_users': analytics_data['new_users'],
+        'total_bookings': analytics_data['total_bookings'],
+        'total_revenue': analytics_data['total_revenue'],
+        'total_page_views': analytics_data['total_page_views'],
+        'top_pages': [
+            {'url': page.page_url, 'name': page.page_name, 'views': page.view_count}
+            for page in analytics_data['top_pages']
+        ],
+    }
+    
+    return JsonResponse(response_data)
+
+
+@login_required 
+def user_activity_detail(request, user_id):
+    """Xem chi tiết hoạt động của một user cụ thể"""
+    if not request.user.is_admin():
+        messages.error(request, 'Bạn không có quyền truy cập trang này.')
+        return HttpResponseForbidden("Bạn không có quyền truy cập trang này.")
+    
+    user = get_object_or_404(CustomUser, userID=user_id)
+    activity_summary = get_user_activity_summary(user)
+    activities = UserActivity.objects.filter(user=user).order_by('-created_at')[:100]
+    
+    # Phân trang
+    paginator = Paginator(activities, 20)
+    page_number = request.GET.get('page')
+    page_activities = paginator.get_page(page_number)
+    
+    context = {
+        'target_user': user,
+        'activity_summary': activity_summary,
+        'activities': page_activities,
+    }
+    
+    return render(request, 'apps/user_activity_detail.html', context)

@@ -45,5 +45,9 @@ urlpatterns = [
     path('google-login/', views.google_login, name='google_login'),
     # Search
     path('search/', views.search_courts, name='search_courts'),
+    # Analytics - Thống kê hoạt động
+    path('analytics/', views.analytics_dashboard, name='analytics'),
+    path('analytics/api/', views.analytics_api, name='analytics_api'),
+    path('analytics/user/<str:user_id>/', views.user_activity_detail, name='user_activity_detail'),
 ]
 

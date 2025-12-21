@@ -163,13 +163,13 @@
             <div class="col-lg-6 text-start text-lg-end wow slideInRight" data-wow-delay="0.1s">
                 <ul class="nav nav-pills d-inline-flex justify-content-end mb-5">
                     <li class="nav-item me-2">
-                        <a class="btn btn-outline-primary active" data-bs-toggle="pill" href="#tab-1">All</a>
+                        <a class="btn btn-outline-primary active" data-filter="all" href="javascript:void(0);">All</a>
                     </li>
                     <li class="nav-item me-2">
-                        <a class="btn btn-outline-primary" data-bs-toggle="pill" href="#tab-2">Available</a>
+                        <a class="btn btn-outline-primary" data-filter="Available" href="javascript:void(0);">Available</a>
                     </li>
                     <li class="nav-item me-0">
-                        <a class="btn btn-outline-primary" data-bs-toggle="pill" href="#tab-3">Repairing</a>
+                        <a class="btn btn-outline-primary" data-filter="Repairing" href="javascript:void(0);">Repairing</a>
                     </li>
                 </ul>
             </div>
@@ -178,7 +178,7 @@
             <div id="tab-1" class="tab-pane fade show p-0 active">
                 <div class="row g-4" id="tennis-court-container">
                     {% for court in tennis_courts %}
-                    <div class="col-lg-4 col-md-6 wow fadeInUp tennis-court-item" data-wow-delay="0.1s" style="display: none;">
+                    <div class="col-lg-4 col-md-6 wow fadeInUp tennis-court-item" data-wow-delay="0.1s" data-status="{{ court.status }}">
                         <div class="property-item rounded overflow-hidden">
                             <div class="position-relative overflow-hidden">
                                 <a href=""><img style="height:275px; width: 100%;" class="img-fluid" src="{{ court.ImageURL }}" alt="{{ court.name }}"></a>

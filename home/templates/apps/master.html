@@ -551,12 +551,23 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const filterButtons = document.querySelectorAll('.nav-pills .btn');
+            const filterButtons = document.querySelectorAll('.nav-pills .btn[data-filter]');
             const courtItems = document.querySelectorAll('.tennis-court-item');
     
+            // Show all items initially
+            courtItems.forEach(item => {
+                item.style.display = '';
+            });
+    
             filterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all buttons in the same nav-pills
+                    const parentNav = this.closest('.nav-pills');
+                    if (parentNav) {
+                        parentNav.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+                    }
                     this.classList.add('active');
     
                     const filter = this.getAttribute('data-filter');

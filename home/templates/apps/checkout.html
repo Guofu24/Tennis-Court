@@ -1,29 +1,440 @@
- {% extends 'apps/master.html' %} {% block checkout %}
+{% extends 'apps/master.html' %} 
+{% load static %}
+
+{% block checkout %}
+<style>
+    .payment-method-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #fff;
+    }
+    
+    .payment-method-card:hover {
+        border-color: #00B98E;
+        box-shadow: 0 4px 12px rgba(0, 185, 142, 0.15);
+    }
+    
+    .payment-method-card.selected {
+        border-color: #00B98E;
+        background: linear-gradient(135deg, #f0fff9 0%, #e6fff5 100%);
+        box-shadow: 0 4px 12px rgba(0, 185, 142, 0.2);
+    }
+    
+    .payment-method-card .icon-wrapper {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+    .payment-method-card.balance .icon-wrapper { background: #e8f5e9; color: #4caf50; }
+    .payment-method-card.credit_card .icon-wrapper { background: #e3f2fd; color: #2196f3; }
+    .payment-method-card.momo .icon-wrapper { background: #fce4ec; color: #e91e63; }
+    .payment-method-card.bank_transfer .icon-wrapper { background: #fff3e0; color: #ff9800; }
+    .payment-method-card.vnpay .icon-wrapper { background: #ede7f6; color: #673ab7; }
+    .payment-method-card.zalopay .icon-wrapper { background: #e0f7fa; color: #00bcd4; }
+    
+    .payment-details {
+        display: none;
+        animation: slideDown 0.3s ease;
+    }
+    
+    .payment-details.active {
+        display: block;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .form-control-payment {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-control-payment:focus {
+        border-color: #00B98E;
+        box-shadow: 0 0 0 3px rgba(0, 185, 142, 0.1);
+        outline: none;
+    }
+    
+    .card-input-wrapper {
+        position: relative;
+    }
+    
+    .card-input-wrapper .card-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+    }
+    
+    .booking-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 25px;
+        color: white;
+    }
+    
+    .booking-summary h4 {
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+    
+    .summary-total {
+        font-size: 24px;
+        font-weight: 700;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-pay {
+        background: linear-gradient(135deg, #00B98E 0%, #00d4a0 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 15px 40px;
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-pay:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 185, 142, 0.4);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #f5f5f5;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 15px 40px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #666;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-cancel:hover {
+        background: #ffebee;
+        border-color: #ef5350;
+        color: #ef5350;
+    }
+    
+    .secure-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 15px;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .secure-badge i {
+        color: #00B98E;
+    }
+    
+    .insufficient-balance {
+        background: #fff3e0;
+        border: 1px solid #ff9800;
+        border-radius: 8px;
+        padding: 10px 15px;
+        color: #e65100;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+</style>
+
 <div class="container my-5">
-    <div class="card shadow-lg rounded-lg mx-auto" style="max-width: 900px;">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h2 class="card-title text-center mb-4">Booking Information</h2>
-                    <p><strong>Tennis Court Name: </strong>{{ court.name }}</p>
-                    <p><strong>Price: </strong>${{ court.price }}</p>
-                    <p><strong>Play Time: </strong> {{ play_time }}</p>
-                    <div class="d-flex justify-content-between mt-4">
-                        <form method="POST">
-                            {% csrf_token %}
-                            <button type="submit" name="cancel" class="btn btn-danger">Cancel</button>
-                        </form>
-                        <form method="POST">
-                            {% csrf_token %}
-                            <button type="submit" name="pay" class="btn btn-success">Pay Now</button>
-                        </form>
-                    </div>
+    <div class="row">
+        <!-- Payment Methods -->
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-lg rounded-lg">
+                <div class="card-body p-4">
+                    <h3 class="mb-4"><i class="fas fa-credit-card me-2 text-primary"></i>Select Payment Method</h3>
+                    
+                    <form method="POST" id="paymentForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="payment_method" id="selectedPaymentMethod" value="balance">
+                        
+                        {% for method in payment_methods %}
+                        <div class="payment-method-card {{ method.id }} {% if method.id == 'balance' %}selected{% endif %}" 
+                             data-method="{{ method.id }}" onclick="selectPaymentMethod('{{ method.id }}')">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-wrapper me-3">
+                                    <i class="fas {{ method.icon }}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-0">{{ method.name }}</h5>
+                                    <small class="text-muted">{{ method.description }}</small>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentRadio" 
+                                           id="payment_{{ method.id }}" value="{{ method.id }}"
+                                           {% if method.id == 'balance' %}checked{% endif %}
+                                           style="width: 20px; height: 20px;">
+                                </div>
+                            </div>
+                            
+                            {% if method.id == 'balance' and user_balance < court_price %}
+                            <div class="insufficient-balance">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                Insufficient balance! You need ${{ court_price|floatformat:2 }} but only have ${{ user_balance|floatformat:2 }}.
+                                <a href="{% url 'top_up' %}" class="text-primary fw-bold">Top up now</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Credit Card Details -->
+                        <div id="credit_card_details" class="payment-details mt-4 p-4 bg-light rounded-lg">
+                            <h5 class="mb-3"><i class="fas fa-lock me-2 text-success"></i>Card Information</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Card Number</label>
+                                <div class="card-input-wrapper">
+                                    <input type="text" name="card_number" class="form-control form-control-payment" 
+                                           placeholder="1234 5678 9012 3456" maxlength="19"
+                                           oninput="formatCardNumber(this)">
+                                    <span class="card-icon"><i class="fab fa-cc-visa"></i></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">Expiry Date</label>
+                                    <input type="text" name="card_expiry" class="form-control form-control-payment" 
+                                           placeholder="MM/YY" maxlength="5"
+                                           oninput="formatExpiry(this)">
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <label class="form-label">CVV</label>
+                                    <input type="password" name="card_cvv" class="form-control form-control-payment" 
+                                           placeholder="***" maxlength="4">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cardholder Name</label>
+                                <input type="text" name="card_name" class="form-control form-control-payment" 
+                                       placeholder="NGUYEN VAN A">
+                            </div>
+                        </div>
+                        
+                        <!-- Momo QR -->
+                        <div id="momo_details" class="payment-details mt-4 p-4 bg-light rounded-lg text-center">
+                            <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="Momo" style="width: 80px; margin-bottom: 15px;">
+                            <h5 class="mb-3">Scan QR Code with Momo App</h5>
+                            <div class="bg-white p-4 d-inline-block rounded-lg shadow-sm">
+                                <i class="fas fa-qrcode" style="font-size: 150px; color: #ae2070;"></i>
+                            </div>
+                            <p class="text-muted mt-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Open Momo app and scan the QR code to complete payment
+                            </p>
+                        </div>
+                        
+                        <!-- Bank Transfer -->
+                        <div id="bank_transfer_details" class="payment-details mt-4 p-4 bg-light rounded-lg">
+                            <h5 class="mb-3"><i class="fas fa-university me-2 text-warning"></i>Bank Transfer Information</h5>
+                            <div class="bg-white p-3 rounded mb-3">
+                                <p class="mb-1"><strong>Bank:</strong> Vietcombank</p>
+                                <p class="mb-1"><strong>Account Number:</strong> 1234567890123</p>
+                                <p class="mb-1"><strong>Account Name:</strong> TENNIS COURT SUPERMAN</p>
+                                <p class="mb-0"><strong>Transfer Content:</strong> TC{{ court.id }}_{{ request.user.userID }}</p>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Please transfer exactly <strong>${{ court_price }}</strong> and use the transfer content above.
+                            </div>
+                        </div>
+                        
+                        <!-- VNPay QR -->
+                        <div id="vnpay_details" class="payment-details mt-4 p-4 bg-light rounded-lg text-center">
+                            <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/9/06ncktiwd6dc1694418196384.png" alt="VNPay" style="width: 120px; margin-bottom: 15px;">
+                            <h5 class="mb-3">Pay with VNPay</h5>
+                            <div class="bg-white p-4 d-inline-block rounded-lg shadow-sm">
+                                <i class="fas fa-qrcode" style="font-size: 150px; color: #0066b3;"></i>
+                            </div>
+                            <p class="text-muted mt-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Scan QR with any banking app that supports VNPay
+                            </p>
+                        </div>
+                        
+                        <!-- ZaloPay -->
+                        <div id="zalopay_details" class="payment-details mt-4 p-4 bg-light rounded-lg text-center">
+                            <img src="https://simg.zalopay.com.vn/zlp-website/assets/new_logo_6c5db2d21b.svg" alt="ZaloPay" style="width: 120px; margin-bottom: 15px;">
+                            <h5 class="mb-3">Pay with ZaloPay</h5>
+                            <div class="bg-white p-4 d-inline-block rounded-lg shadow-sm">
+                                <i class="fas fa-qrcode" style="font-size: 150px; color: #008fe5;"></i>
+                            </div>
+                            <p class="text-muted mt-3">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Open Zalo app and scan the QR code to complete payment
+                            </p>
+                        </div>
+                        
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" name="cancel" class="btn btn-cancel">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </button>
+                            <button type="submit" name="pay" class="btn btn-pay" id="payButton">
+                                <i class="fas fa-check me-2"></i>Pay ${{ court_price }}
+                            </button>
+                        </div>
+                        
+                        <div class="secure-badge">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Your payment is secure and encrypted</span>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-md-6">
-                    <img src="{{ court.ImageURL }}" alt="Tennis Court" class="img-fluid" style="max-width: 100%; object-fit: cover;">
+            </div>
+        </div>
+        
+        <!-- Booking Summary -->
+        <div class="col-lg-5">
+            <div class="booking-summary mb-4">
+                <h4><i class="fas fa-receipt me-2"></i>Booking Summary</h4>
+                
+                <div class="mb-3">
+                    <img src="{{ court.ImageURL }}" alt="{{ court.name }}" class="img-fluid rounded-lg" style="max-height: 200px; width: 100%; object-fit: cover;">
+                </div>
+                
+                <div class="summary-item">
+                    <span>Court Name</span>
+                    <strong>{{ court.name }}</strong>
+                </div>
+                <div class="summary-item">
+                    <span>Play Time</span>
+                    <strong>{{ play_time }}</strong>
+                </div>
+                <div class="summary-item">
+                    <span>Location</span>
+                    <strong>{{ court.court_address|default:"Not specified" }}</strong>
+                </div>
+                <div class="summary-item">
+                    <span>Court Price</span>
+                    <strong>${{ court_price }}</strong>
+                </div>
+                <div class="summary-item">
+                    <span>Service Fee</span>
+                    <strong>$0.00</strong>
+                </div>
+                
+                <div class="summary-total d-flex justify-content-between">
+                    <span>Total</span>
+                    <span>${{ court_price }}</span>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="fas fa-wallet me-2 text-success"></i>Your Account</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Current Balance:</span>
+                        <span class="h4 mb-0 {% if user_balance >= court_price %}text-success{% else %}text-danger{% endif %}">
+                            ${{ user_balance|floatformat:2 }}
+                        </span>
+                    </div>
+                    {% if user_balance < court_price %}
+                    <a href="{% url 'top_up' %}" class="btn btn-outline-success w-100 mt-3">
+                        <i class="fas fa-plus-circle me-2"></i>Top Up Balance
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function selectPaymentMethod(method) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.payment-method-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked card
+    document.querySelector(`.payment-method-card.${method}`).classList.add('selected');
+    
+    // Update hidden input and radio button
+    document.getElementById('selectedPaymentMethod').value = method;
+    document.getElementById('payment_' + method).checked = true;
+    
+    // Hide all payment details
+    document.querySelectorAll('.payment-details').forEach(detail => {
+        detail.classList.remove('active');
+    });
+    
+    // Show relevant payment details
+    const detailsDiv = document.getElementById(method + '_details');
+    if (detailsDiv) {
+        detailsDiv.classList.add('active');
+    }
+    
+    // Update pay button text based on method
+    const payButton = document.getElementById('payButton');
+    const methodNames = {
+        'balance': 'Pay with Balance',
+        'credit_card': 'Pay with Card',
+        'momo': 'Pay with Momo',
+        'bank_transfer': 'Confirm Transfer',
+        'vnpay': 'Pay with VNPay',
+        'zalopay': 'Pay with ZaloPay'
+    };
+    payButton.innerHTML = `<i class="fas fa-check me-2"></i>${methodNames[method]} ${{ court_price }}`;
+}
+
+function formatCardNumber(input) {
+    let value = input.value.replace(/\s/g, '').replace(/\D/g, '');
+    let formatted = value.match(/.{1,4}/g);
+    input.value = formatted ? formatted.join(' ') : '';
+}
+
+function formatExpiry(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    }
+    input.value = value;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    selectPaymentMethod('balance');
+});
+</script>
 {% endblock %}

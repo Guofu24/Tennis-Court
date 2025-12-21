@@ -83,6 +83,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
     "allauth.account.middleware.AccountMiddleware",
+    # Activity tracking middleware
+    "home.middleware.ActivityTrackingMiddleware",
+    "home.middleware.OnlineUsersMiddleware",
 ]
 
 ROOT_URLCONF = "tennis.urls"

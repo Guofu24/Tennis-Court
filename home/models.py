@@ -230,10 +230,21 @@ class Invoice(models.Model):
         ('Paid', 'Paid'),
         ('Cancelled', 'Cancelled'),
     ]
+    PAYMENT_METHOD_CHOICES = [
+        ('balance', 'Account Balance'),
+        ('credit_card', 'Credit Card'),
+        ('momo', 'Momo Wallet'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('vnpay', 'VNPay'),
+        ('zalopay', 'ZaloPay'),
+    ]
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='invoices')
     booking = models.ForeignKey('Booking', on_delete=models.SET_NULL, null=True, related_name='invoices')
     amount = models.FloatField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='balance')
+    card_last_four = models.CharField(max_length=4, blank=True, null=True)  # Lưu 4 số cuối thẻ
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)  # ID giao dịch từ cổng thanh toán
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -310,13 +321,22 @@ class TransactionHistory(models.Model):
         ('Deposit', 'Deposit'),  
         ('Payment', 'Payment'),  
     ]
+    PAYMENT_METHOD_CHOICES = [
+        ('balance', 'Account Balance'),
+        ('credit_card', 'Credit Card'),
+        ('momo', 'Momo Wallet'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('vnpay', 'VNPay'),
+        ('zalopay', 'ZaloPay'),
+    ]
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='transactions')
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='balance')
     amount = models.FloatField() 
     timestamp = models.DateTimeField(auto_now_add=True)  
 
     def __str__(self):
-        return f'{self.user.username} - {self.transaction_type} - {self.amount} at {self.timestamp}'
+        return f'{self.user.username} - {self.transaction_type} - {self.amount} via {self.get_payment_method_display()} at {self.timestamp}'
 
     class Meta:
         ordering = ['-timestamp'] 
@@ -328,3 +348,117 @@ class PasswordResetRequest(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {'Approved' if self.is_approved else 'Pending'}"
+
+
+class UserActivity(models.Model):
+    """Model để theo dõi hoạt động của người dùng"""
+    ACTIVITY_TYPES = [
+        ('register', 'Đăng ký tài khoản'),
+        ('login', 'Đăng nhập'),
+        ('logout', 'Đăng xuất'),
+        ('view_court', 'Xem sân tennis'),
+        ('booking', 'Đặt sân'),
+        ('cancel_booking', 'Hủy đặt sân'),
+        ('payment', 'Thanh toán'),
+        ('top_up', 'Nạp tiền'),
+        ('review', 'Đánh giá'),
+        ('report', 'Báo cáo'),
+        ('profile_update', 'Cập nhật hồ sơ'),
+        ('password_reset', 'Yêu cầu đặt lại mật khẩu'),
+        ('page_view', 'Xem trang'),
+    ]
+    
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='activities')
+    activity_type = models.CharField(max_length=50, choices=ACTIVITY_TYPES)
+    description = models.TextField(blank=True, null=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, null=True)
+    page_url = models.URLField(max_length=500, blank=True, null=True)
+    referrer = models.URLField(max_length=500, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Thông tin bổ sung (JSON field để lưu dữ liệu linh hoạt)
+    extra_data = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Hoạt động người dùng'
+        verbose_name_plural = 'Hoạt động người dùng'
+    
+    def __str__(self):
+        username = self.user.username if self.user else 'Anonymous'
+        return f"{username} - {self.get_activity_type_display()} - {self.created_at}"
+
+
+class PageView(models.Model):
+    """Model để theo dõi số lượt xem của từng trang"""
+    page_url = models.CharField(max_length=500)
+    page_name = models.CharField(max_length=255, blank=True, null=True)
+    view_count = models.PositiveIntegerField(default=0)
+    unique_visitors = models.PositiveIntegerField(default=0)
+    last_viewed = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-view_count']
+        verbose_name = 'Lượt xem trang'
+        verbose_name_plural = 'Lượt xem trang'
+    
+    def __str__(self):
+        return f"{self.page_name or self.page_url} - {self.view_count} lượt xem"
+    
+    @classmethod
+    def record_view(cls, page_url, page_name=None):
+        """Ghi lại lượt xem trang"""
+        page, created = cls.objects.get_or_create(
+            page_url=page_url,
+            defaults={'page_name': page_name, 'view_count': 0}
+        )
+        page.view_count += 1
+        if page_name and not page.page_name:
+            page.page_name = page_name
+        page.save()
+        return page
+
+
+class DailyStats(models.Model):
+    """Model để lưu thống kê hàng ngày"""
+    date = models.DateField(unique=True)
+    total_visits = models.PositiveIntegerField(default=0)
+    unique_visitors = models.PositiveIntegerField(default=0)
+    new_registrations = models.PositiveIntegerField(default=0)
+    total_bookings = models.PositiveIntegerField(default=0)
+    total_revenue = models.FloatField(default=0.0)
+    
+    class Meta:
+        ordering = ['-date']
+        verbose_name = 'Thống kê hàng ngày'
+        verbose_name_plural = 'Thống kê hàng ngày'
+    
+    def __str__(self):
+        return f"Stats for {self.date}"
+
+
+class VisitorSession(models.Model):
+    """Model để theo dõi phiên truy cập (visitor session)"""
+    session_key = models.CharField(max_length=40, unique=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, null=True)
+    device_type = models.CharField(max_length=50, blank=True, null=True)  # mobile, tablet, desktop
+    browser = models.CharField(max_length=100, blank=True, null=True)
+    os = models.CharField(max_length=100, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    started_at = models.DateTimeField(auto_now_add=True)
+    last_activity = models.DateTimeField(auto_now=True)
+    page_views = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        ordering = ['-last_activity']
+        verbose_name = 'Phiên truy cập'
+        verbose_name_plural = 'Phiên truy cập'
+    
+    def __str__(self):
+        username = self.user.username if self.user else 'Anonymous'
+        return f"Session {self.session_key[:8]}... - {username}"

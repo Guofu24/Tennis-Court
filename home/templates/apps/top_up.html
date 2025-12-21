@@ -1,35 +1,499 @@
 {% extends 'apps/master.html' %} {% load static %} {% block top_up %}
-<div class="container mt-5">
-    <h2>Top Up Your Account</h2>
+<style>
+    .topup-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
     
-    <form method="POST">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="bank" class="form-label">Select Bank</label>
-            <select name="bank" id="bank" class="form-select">
-                <option value="bank1">Bank 1</option>
-                <option value="bank2">Bank 2</option>
-                <option value="wallet1">E-Wallet 1</option>
-                <option value="wallet2">E-Wallet 2</option>
-            </select>
+    .payment-type-btn {
+        padding: 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .payment-type-btn:hover {
+        border-color: #00B98E;
+        box-shadow: 0 4px 12px rgba(0, 185, 142, 0.15);
+    }
+    
+    .payment-type-btn.active {
+        border-color: #00B98E;
+        background: linear-gradient(135deg, #f0fff9 0%, #e6fff5 100%);
+    }
+    
+    .payment-type-btn i {
+        font-size: 32px;
+        margin-bottom: 10px;
+        display: block;
+    }
+    
+    .bank-option, .wallet-option {
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 8px;
+    }
+    
+    .bank-option:hover, .wallet-option:hover {
+        border-color: #00B98E;
+        background: #f8fff9;
+    }
+    
+    .bank-option.selected, .wallet-option.selected {
+        border-color: #00B98E;
+        background: #e8f5e9;
+    }
+    
+    .quick-amount-btn {
+        padding: 12px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+    
+    .quick-amount-btn:hover {
+        border-color: #00B98E;
+        color: #00B98E;
+    }
+    
+    .quick-amount-btn.selected {
+        border-color: #00B98E;
+        background: #00B98E;
+        color: white;
+    }
+    
+    .form-section {
+        display: none;
+    }
+    
+    .form-section.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .balance-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 25px;
+        color: white;
+    }
+    
+    .balance-amount {
+        font-size: 36px;
+        font-weight: 700;
+    }
+    
+    .form-control-topup {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control-topup:focus {
+        border-color: #00B98E;
+        box-shadow: 0 0 0 3px rgba(0, 185, 142, 0.1);
+    }
+    
+    .form-control-topup.is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .validation-hint {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+    }
+    
+    .btn-topup {
+        background: linear-gradient(135deg, #00B98E 0%, #00d4a0 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 15px 40px;
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-topup:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 185, 142, 0.4);
+        color: white;
+    }
+    
+    .limit-info {
+        background: #fff3e0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .limit-info i {
+        color: #ff9800;
+    }
+</style>
+
+<div class="container my-5 topup-container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-lg rounded-lg mb-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4"><i class="fas fa-wallet me-2 text-success"></i>Top Up Your Account</h3>
+                    
+                    <form method="POST" id="topupForm">
+                        {% csrf_token %}
+                        
+                        <!-- Step 1: Choose Payment Type -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">1. Choose Payment Method</h5>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="payment-type-btn" id="bankTypeBtn" onclick="selectPaymentType('bank')">
+                                        <i class="fas fa-university text-primary"></i>
+                                        <strong>Bank Card</strong>
+                                        <small class="d-block text-muted">Credit/Debit Card</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="payment-type-btn" id="walletTypeBtn" onclick="selectPaymentType('wallet')">
+                                        <i class="fas fa-mobile-alt text-danger"></i>
+                                        <strong>E-Wallet</strong>
+                                        <small class="d-block text-muted">Momo, ZaloPay, VNPay</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="payment_type" id="paymentType" value="">
+                        </div>
+                        
+                        <!-- Bank Selection -->
+                        <div class="form-section" id="bankSection">
+                            <h5 class="mb-3">2. Select Your Bank</h5>
+                            <div class="row g-2 mb-4">
+                                {% for bank in banks %}
+                                <div class="col-6 col-md-3">
+                                    <div class="bank-option" data-bank="{{ bank.id }}" onclick="selectBank('{{ bank.id }}')">
+                                        <i class="fas fa-landmark me-2"></i>{{ bank.name }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="bank" id="selectedBank" value="">
+                            
+                            <h5 class="mb-3">3. Card Information</h5>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Card Number <span class="text-danger">*</span></label>
+                                    <input type="text" name="card_number" class="form-control form-control-topup" 
+                                           placeholder="1234 5678 9012 3456" maxlength="19"
+                                           oninput="formatCardNumber(this)" id="cardNumber"
+                                           value="{{ form_data.card_number|default:'' }}">
+                                    <div class="validation-hint">Enter 13-19 digit card number</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Expiry Date <span class="text-danger">*</span></label>
+                                    <input type="text" name="card_expiry" class="form-control form-control-topup" 
+                                           placeholder="MM/YY" maxlength="5"
+                                           oninput="formatExpiry(this)" id="cardExpiry"
+                                           value="{{ form_data.card_expiry|default:'' }}">
+                                    <div class="validation-hint">Format: MM/YY</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">CVV <span class="text-danger">*</span></label>
+                                    <input type="password" name="card_cvv" class="form-control form-control-topup" 
+                                           placeholder="***" maxlength="4" id="cardCvv"
+                                           value="{{ form_data.card_cvv|default:'' }}">
+                                    <div class="validation-hint">3-4 digits on back of card</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Wallet Selection -->
+                        <div class="form-section" id="walletSection">
+                            <h5 class="mb-3">2. Select E-Wallet</h5>
+                            <div class="row g-2 mb-4">
+                                {% for wallet in wallets %}
+                                <div class="col-6 col-md-3">
+                                    <div class="wallet-option" data-wallet="{{ wallet.id }}" onclick="selectWallet('{{ wallet.id }}')">
+                                        <i class="fas fa-wallet me-2"></i>{{ wallet.name }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="wallet" id="selectedWallet" value="">
+                            
+                            <h5 class="mb-3">3. Wallet Information</h5>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                    <input type="text" name="phone_number" class="form-control form-control-topup" 
+                                           placeholder="0912 345 678" maxlength="15" id="phoneNumber"
+                                           value="{{ form_data.phone_number|default:'' }}">
+                                    <div class="validation-hint">Vietnamese phone number (10 digits starting with 03, 05, 07, 08, 09)</div>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">OTP Code <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="text" name="otp_code" class="form-control form-control-topup" 
+                                               placeholder="123456" maxlength="6" id="otpCode"
+                                               value="{{ form_data.otp_code|default:'' }}">
+                                        <button type="button" class="btn btn-outline-success" onclick="sendOTP()" id="sendOtpBtn">
+                                            Send OTP
+                                        </button>
+                                    </div>
+                                    <div class="validation-hint">Enter 6-digit OTP sent to your phone</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Common Fields -->
+                        <div class="form-section" id="commonSection">
+                            <hr class="my-4">
+                            
+                            <h5 class="mb-3">4. Account Holder Information</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Account Holder Name <span class="text-danger">*</span></label>
+                                <input type="text" name="account_name" class="form-control form-control-topup" 
+                                       placeholder="NGUYEN VAN A" id="accountName"
+                                       value="{{ form_data.account_name|default:'' }}">
+                                <div class="validation-hint">Full name as shown on card/wallet (letters only, 2-100 characters)</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password" class="form-control form-control-topup" 
+                                       placeholder="Enter your password" id="password">
+                                <div class="validation-hint">Minimum 6 characters</div>
+                            </div>
+                            
+                            <h5 class="mb-3">5. Top-up Amount</h5>
+                            
+                            <!-- Quick Amount Buttons -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                {% for amount in quick_amounts %}
+                                <button type="button" class="quick-amount-btn" onclick="selectQuickAmount({{ amount }})">
+                                    ${{ amount }}
+                                </button>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Or Enter Custom Amount <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="amount" class="form-control form-control-topup" 
+                                           placeholder="Enter amount" step="0.01" min="10" max="10000" id="amount"
+                                           value="{{ form_data.amount|default:'' }}">
+                                </div>
+                                <div class="validation-hint">Minimum: $10 | Maximum: $10,000 per transaction | Daily limit: $50,000</div>
+                            </div>
+                            
+                            <div class="limit-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Transaction Limits:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Minimum amount per transaction: <strong>$10</strong></li>
+                                    <li>Maximum amount per transaction: <strong>$10,000</strong></li>
+                                    <li>Daily limit: <strong>$50,000</strong></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="d-flex gap-3 mt-4">
+                                <a href="{% url 'property_list' %}" class="btn btn-outline-secondary btn-lg flex-fill">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-topup btn-lg flex-fill" id="submitBtn">
+                                    <i class="fas fa-check me-2"></i>Confirm Top-up
+                                </button>
+                            </div>
+                            
+                            <div class="text-center mt-3">
+                                <i class="fas fa-shield-alt text-success me-1"></i>
+                                <small class="text-muted">Your transaction is secure and encrypted</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="account_name" class="form-label">Account Name</label>
-            <input type="text" name="account_name" class="form-control" id="account_name" required>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="balance-card mb-4">
+                <h5><i class="fas fa-wallet me-2"></i>Current Balance</h5>
+                <div class="balance-amount">${{ current_balance|floatformat:2|default:"0.00" }}</div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="fas fa-history me-2 text-primary"></i>Recent Top-ups</h5>
+                    <div class="text-muted small">
+                        {% if request.user.transactions.all %}
+                            {% for tx in request.user.transactions.all|slice:":5" %}
+                                {% if tx.transaction_type == 'Deposit' %}
+                                <div class="d-flex justify-content-between py-2 border-bottom">
+                                    <span>{{ tx.timestamp|date:"d/m/Y H:i" }}</span>
+                                    <span class="text-success fw-bold">+${{ tx.amount }}</span>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-center">No recent transactions</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="fas fa-question-circle me-2 text-warning"></i>Need Help?</h5>
+                    <p class="small text-muted mb-2">For test purposes, you can use:</p>
+                    <ul class="small text-muted">
+                        <li>Card: <code>4111111111111111</code></li>
+                        <li>Expiry: <code>12/25</code></li>
+                        <li>CVV: <code>123</code></li>
+                        <li>OTP: <code>123456</code></li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" id="password" required>
-        </div>
-        <div class="mb-3">
-            <label for="amount" class="form-label">Amount to Top Up</label>
-            <input type="number" name="amount" class="form-control" id="amount" step="0.01" required>
-        </div>
-        <div class="mb-3">
-            <button type="submit" class="btn btn-primary">OK</button>
-            <a href="{% url 'property_list' %}" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
+    </div>
 </div>
 
-{% endblock%}
+<script>
+let selectedPaymentType = '';
+let selectedBank = '';
+let selectedWallet = '';
+
+function selectPaymentType(type) {
+    selectedPaymentType = type;
+    document.getElementById('paymentType').value = type;
+    
+    // Update button styles
+    document.getElementById('bankTypeBtn').classList.remove('active');
+    document.getElementById('walletTypeBtn').classList.remove('active');
+    document.getElementById(type + 'TypeBtn').classList.add('active');
+    
+    // Show/hide sections
+    document.getElementById('bankSection').classList.remove('active');
+    document.getElementById('walletSection').classList.remove('active');
+    document.getElementById('commonSection').classList.remove('active');
+    
+    if (type === 'bank') {
+        document.getElementById('bankSection').classList.add('active');
+    } else {
+        document.getElementById('walletSection').classList.add('active');
+    }
+    document.getElementById('commonSection').classList.add('active');
+}
+
+function selectBank(bankId) {
+    selectedBank = bankId;
+    document.getElementById('selectedBank').value = bankId;
+    
+    // Update styles
+    document.querySelectorAll('.bank-option').forEach(opt => opt.classList.remove('selected'));
+    document.querySelector(`.bank-option[data-bank="${bankId}"]`).classList.add('selected');
+}
+
+function selectWallet(walletId) {
+    selectedWallet = walletId;
+    document.getElementById('selectedWallet').value = walletId;
+    
+    // Update styles
+    document.querySelectorAll('.wallet-option').forEach(opt => opt.classList.remove('selected'));
+    document.querySelector(`.wallet-option[data-wallet="${walletId}"]`).classList.add('selected');
+}
+
+function selectQuickAmount(amount) {
+    document.getElementById('amount').value = amount;
+    
+    // Update button styles
+    document.querySelectorAll('.quick-amount-btn').forEach(btn => btn.classList.remove('selected'));
+    event.target.classList.add('selected');
+}
+
+function formatCardNumber(input) {
+    let value = input.value.replace(/\s/g, '').replace(/\D/g, '');
+    let formatted = value.match(/.{1,4}/g);
+    input.value = formatted ? formatted.join(' ') : '';
+}
+
+function formatExpiry(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    }
+    input.value = value;
+}
+
+let otpCooldown = 0;
+function sendOTP() {
+    const phoneNumber = document.getElementById('phoneNumber').value;
+    if (!phoneNumber) {
+        alert('Please enter your phone number first.');
+        return;
+    }
+    
+    const btn = document.getElementById('sendOtpBtn');
+    btn.disabled = true;
+    otpCooldown = 60;
+    
+    const interval = setInterval(() => {
+        otpCooldown--;
+        btn.textContent = `Resend (${otpCooldown}s)`;
+        
+        if (otpCooldown <= 0) {
+            clearInterval(interval);
+            btn.disabled = false;
+            btn.textContent = 'Send OTP';
+        }
+    }, 1000);
+    
+    alert('OTP sent to ' + phoneNumber + '!\n\nFor testing, use: 123456');
+}
+
+// Form validation before submit
+document.getElementById('topupForm').addEventListener('submit', function(e) {
+    let errors = [];
+    
+    if (!selectedPaymentType) {
+        errors.push('Please select a payment method.');
+    }
+    
+    if (selectedPaymentType === 'bank' && !selectedBank) {
+        errors.push('Please select a bank.');
+    }
+    
+    if (selectedPaymentType === 'wallet' && !selectedWallet) {
+        errors.push('Please select an e-wallet.');
+    }
+    
+    const amount = document.getElementById('amount').value;
+    if (!amount || parseFloat(amount) < 10) {
+        errors.push('Minimum top-up amount is $10.');
+    }
+    
+    if (errors.length > 0) {
+        e.preventDefault();
+        alert(errors.join('\n'));
+    }
+});
+</script>
+
+{% endblock %}

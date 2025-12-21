@@ -1,0 +1,270 @@
+{% extends "apps/master.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'analytics' %}">Thống kê</a></li>
+                        <li class="breadcrumb-item active">{{ target_user.username }}</li>
+                    </ol>
+                </nav>
+                <h2 class="text-primary">
+                    <i class="fas fa-user-circle me-2"></i>
+                    Chi tiết hoạt động: {{ target_user.username }}
+                </h2>
+            </div>
+        </div>
+
+        <!-- User Info Card -->
+        <div class="row mb-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        {% if target_user.photo %}
+                            <img src="{{ target_user.photo.url }}" alt="{{ target_user.username }}" 
+                                 class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                 style="width: 100px; height: 100px;">
+                                <i class="fas fa-user fa-3x text-white"></i>
+                            </div>
+                        {% endif %}
+                        <h4>{{ target_user.get_full_name|default:target_user.username }}</h4>
+                        <p class="text-muted mb-2">{{ target_user.email }}</p>
+                        <span class="badge {% if target_user.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
+                            {{ target_user.role|upper }}
+                        </span>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small class="text-muted">User ID</small>
+                                <p class="mb-0 fw-bold">{{ target_user.userID }}</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Số dư</small>
+                                <p class="mb-0 fw-bold text-success">${{ target_user.balance|floatformat:0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-8">
+                <div class="row g-3">
+                    <!-- Tổng hoạt động -->
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-2x text-primary mb-2"></i>
+                                <h3>{{ activity_summary.total_activities }}</h3>
+                                <small class="text-muted">Tổng hoạt động</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Số lần đăng nhập -->
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-sign-in-alt fa-2x text-success mb-2"></i>
+                                <h3>{{ activity_summary.login_count }}</h3>
+                                <small class="text-muted">Lần đăng nhập</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Số lần đặt sân -->
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-check fa-2x text-info mb-2"></i>
+                                <h3>{{ activity_summary.booking_count }}</h3>
+                                <small class="text-muted">Lần đặt sân</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lượt xem trang -->
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-eye fa-2x text-secondary mb-2"></i>
+                                <h3>{{ activity_summary.page_views }}</h3>
+                                <small class="text-muted">Lượt xem trang</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hoạt động cuối -->
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                <p class="mb-0">
+                                    {% if activity_summary.last_activity %}
+                                        {{ activity_summary.last_activity.created_at|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        Chưa có
+                                    {% endif %}
+                                </p>
+                                <small class="text-muted">Hoạt động cuối</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thống kê theo loại -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2 text-primary"></i>Phân Loại Hoạt Động</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for stat in activity_summary.activity_by_type %}
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    {% if stat.activity_type == 'login' %}
+                                        <i class="fas fa-sign-in-alt text-success me-2"></i>
+                                    {% elif stat.activity_type == 'register' %}
+                                        <i class="fas fa-user-plus text-primary me-2"></i>
+                                    {% elif stat.activity_type == 'booking' %}
+                                        <i class="fas fa-calendar-check text-info me-2"></i>
+                                    {% elif stat.activity_type == 'payment' %}
+                                        <i class="fas fa-credit-card text-warning me-2"></i>
+                                    {% elif stat.activity_type == 'page_view' %}
+                                        <i class="fas fa-eye text-secondary me-2"></i>
+                                    {% elif stat.activity_type == 'top_up' %}
+                                        <i class="fas fa-wallet text-success me-2"></i>
+                                    {% elif stat.activity_type == 'review' %}
+                                        <i class="fas fa-star text-warning me-2"></i>
+                                    {% elif stat.activity_type == 'logout' %}
+                                        <i class="fas fa-sign-out-alt text-danger me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-muted me-2"></i>
+                                    {% endif %}
+                                    <div>
+                                        <span class="fw-bold">{{ stat.count }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ stat.activity_type }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12 text-center text-muted">
+                                Chưa có dữ liệu thống kê
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lịch sử hoạt động -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-history me-2 text-info"></i>Lịch Sử Hoạt Động</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Thời gian</th>
+                                        <th>Loại</th>
+                                        <th>Mô tả</th>
+                                        <th>Trang</th>
+                                        <th>IP</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in activities %}
+                                    <tr>
+                                        <td>{{ activity.created_at|date:"d/m/Y H:i:s" }}</td>
+                                        <td>
+                                            {% if activity.activity_type == 'login' %}
+                                                <span class="badge bg-success">Đăng nhập</span>
+                                            {% elif activity.activity_type == 'register' %}
+                                                <span class="badge bg-primary">Đăng ký</span>
+                                            {% elif activity.activity_type == 'booking' %}
+                                                <span class="badge bg-info">Đặt sân</span>
+                                            {% elif activity.activity_type == 'payment' %}
+                                                <span class="badge bg-warning text-dark">Thanh toán</span>
+                                            {% elif activity.activity_type == 'page_view' %}
+                                                <span class="badge bg-secondary">Xem trang</span>
+                                            {% elif activity.activity_type == 'logout' %}
+                                                <span class="badge bg-danger">Đăng xuất</span>
+                                            {% elif activity.activity_type == 'top_up' %}
+                                                <span class="badge bg-success">Nạp tiền</span>
+                                            {% elif activity.activity_type == 'review' %}
+                                                <span class="badge bg-warning">Đánh giá</span>
+                                            {% else %}
+                                                <span class="badge bg-dark">{{ activity.activity_type }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ activity.description|default:"-" }}</td>
+                                        <td>
+                                            <small class="text-truncate d-inline-block" style="max-width: 200px;">
+                                                {{ activity.page_url|default:"-" }}
+                                            </small>
+                                        </td>
+                                        <td><small class="text-muted">{{ activity.ip_address|default:"-" }}</small></td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Chưa có hoạt động nào</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if activities.has_other_pages %}
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if activities.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ activities.previous_page_number }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in activities.paginator.page_range %}
+                                    {% if activities.number == num %}
+                                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                    {% elif num > activities.number|add:'-3' and num < activities.number|add:'3' %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if activities.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ activities.next_page_number }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

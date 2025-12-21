@@ -1,0 +1,530 @@
+{% extends "apps/master.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="text-primary"><i class="fas fa-chart-line me-2"></i>Thống Kê Hoạt Động</h2>
+                    <div class="btn-group">
+                        <a href="?days=7" class="btn btn-outline-primary {% if days == 7 %}active{% endif %}">7 ngày</a>
+                        <a href="?days=30" class="btn btn-outline-primary {% if days == 30 %}active{% endif %}">30 ngày</a>
+                        <a href="?days=90" class="btn btn-outline-primary {% if days == 90 %}active{% endif %}">90 ngày</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="row g-4 mb-4">
+            <!-- Người dùng online -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-circle text-success fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h3 class="mb-0">{{ online_users }}</h3>
+                                <p class="text-muted mb-0">Đang online</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tổng người dùng -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-users text-primary fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h3 class="mb-0">{{ total_users }}</h3>
+                                <p class="text-muted mb-0">Tổng người dùng</p>
+                                <small class="text-success">+{{ analytics_data.new_users }} mới</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tổng lượt xem -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-eye text-info fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h3 class="mb-0">{{ analytics_data.total_page_views }}</h3>
+                                <p class="text-muted mb-0">Tổng lượt xem</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Doanh thu -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-dollar-sign text-warning fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h3 class="mb-0">${{ analytics_data.total_revenue|floatformat:0 }}</h3>
+                                <p class="text-muted mb-0">Doanh thu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Second Row Cards -->
+        <div class="row g-4 mb-4">
+            <!-- Sân tennis -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-table-tennis me-2 text-primary"></i>Sân Tennis</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h4 class="text-primary mb-0">{{ total_courts }}</h4>
+                                <small class="text-muted">Tổng cộng</small>
+                            </div>
+                            <div class="col-4">
+                                <h4 class="text-success mb-0">{{ available_courts }}</h4>
+                                <small class="text-muted">Sẵn sàng</small>
+                            </div>
+                            <div class="col-4">
+                                <h4 class="text-danger mb-0">{{ repairing_courts }}</h4>
+                                <small class="text-muted">Đang sửa</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Phiên truy cập -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2 text-info"></i>Phiên Truy Cập</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h4 class="text-info mb-0">{{ analytics_data.active_sessions }}</h4>
+                                <small class="text-muted">Đang hoạt động</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-secondary mb-0">{{ analytics_data.total_bookings }}</h4>
+                                <small class="text-muted">Đặt sân</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Người dùng -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-user-shield me-2 text-success"></i>Phân Loại User</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h4 class="text-success mb-0">{{ total_regular_users }}</h4>
+                                <small class="text-muted">Người dùng</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-danger mb-0">{{ total_admins }}</h4>
+                                <small class="text-muted">Admin</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Biểu đồ đặt sân -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2 text-primary"></i>Đặt Sân (7 ngày gần nhất)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="bookingChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Biểu đồ đăng ký -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-user-plus me-2 text-success"></i>Đăng Ký Mới (7 ngày gần nhất)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="registerChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Thống kê thiết bị -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-mobile-alt me-2 text-info"></i>Thiết Bị</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="deviceChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Thống kê trình duyệt -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-globe me-2 text-warning"></i>Trình Duyệt</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="browserChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top trang -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-file me-2 text-primary"></i>Trang Phổ Biến</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                        <ul class="list-group list-group-flush">
+                            {% for page in analytics_data.top_pages %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span class="text-truncate" style="max-width: 200px;">{{ page.page_name|default:page.page_url }}</span>
+                                <span class="badge bg-primary rounded-pill">{{ page.view_count }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item px-0 text-muted">Chưa có dữ liệu</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Thống kê theo loại hoạt động -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-list me-2 text-success"></i>Hoạt Động Theo Loại</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Loại hoạt động</th>
+                                        <th class="text-end">Số lượng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in analytics_data.activity_stats %}
+                                    <tr>
+                                        <td>
+                                            {% if stat.activity_type == 'login' %}
+                                                <i class="fas fa-sign-in-alt text-success me-2"></i>Đăng nhập
+                                            {% elif stat.activity_type == 'register' %}
+                                                <i class="fas fa-user-plus text-primary me-2"></i>Đăng ký
+                                            {% elif stat.activity_type == 'booking' %}
+                                                <i class="fas fa-calendar-check text-info me-2"></i>Đặt sân
+                                            {% elif stat.activity_type == 'payment' %}
+                                                <i class="fas fa-credit-card text-warning me-2"></i>Thanh toán
+                                            {% elif stat.activity_type == 'page_view' %}
+                                                <i class="fas fa-eye text-secondary me-2"></i>Xem trang
+                                            {% elif stat.activity_type == 'top_up' %}
+                                                <i class="fas fa-wallet text-success me-2"></i>Nạp tiền
+                                            {% elif stat.activity_type == 'review' %}
+                                                <i class="fas fa-star text-warning me-2"></i>Đánh giá
+                                            {% elif stat.activity_type == 'logout' %}
+                                                <i class="fas fa-sign-out-alt text-danger me-2"></i>Đăng xuất
+                                            {% else %}
+                                                <i class="fas fa-circle text-muted me-2"></i>{{ stat.activity_type }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end"><span class="badge bg-secondary">{{ stat.count }}</span></td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">Chưa có dữ liệu</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top người dùng hoạt động -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0"><i class="fas fa-trophy me-2 text-warning"></i>Top Người Dùng Hoạt Động</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Username</th>
+                                        <th class="text-end">Hoạt động</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in top_active_users %}
+                                    <tr>
+                                        <td>
+                                            {% if forloop.counter == 1 %}
+                                                <i class="fas fa-medal text-warning"></i>
+                                            {% elif forloop.counter == 2 %}
+                                                <i class="fas fa-medal text-secondary"></i>
+                                            {% elif forloop.counter == 3 %}
+                                                <i class="fas fa-medal" style="color: #cd7f32;"></i>
+                                            {% else %}
+                                                {{ forloop.counter }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user.user__username }}</td>
+                                        <td class="text-end"><span class="badge bg-primary">{{ user.activity_count }}</span></td>
+                                        <td>
+                                            <a href="{% url 'user_activity_detail' user.user__userID %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">Chưa có dữ liệu</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hoạt động gần đây -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-history me-2 text-info"></i>Hoạt Động Gần Đây</h5>
+                        <span class="badge bg-info">50 hoạt động mới nhất</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-hover table-sm">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th>Thời gian</th>
+                                        <th>Người dùng</th>
+                                        <th>Hoạt động</th>
+                                        <th>Mô tả</th>
+                                        <th>IP</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in recent_activities %}
+                                    <tr>
+                                        <td><small>{{ activity.created_at|date:"d/m H:i" }}</small></td>
+                                        <td>
+                                            {% if activity.user %}
+                                                <a href="{% url 'user_activity_detail' activity.user.userID %}">
+                                                    {{ activity.user.username }}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">Ẩn danh</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if activity.activity_type == 'login' %}
+                                                <span class="badge bg-success">Đăng nhập</span>
+                                            {% elif activity.activity_type == 'register' %}
+                                                <span class="badge bg-primary">Đăng ký</span>
+                                            {% elif activity.activity_type == 'booking' %}
+                                                <span class="badge bg-info">Đặt sân</span>
+                                            {% elif activity.activity_type == 'payment' %}
+                                                <span class="badge bg-warning text-dark">Thanh toán</span>
+                                            {% elif activity.activity_type == 'page_view' %}
+                                                <span class="badge bg-secondary">Xem trang</span>
+                                            {% elif activity.activity_type == 'logout' %}
+                                                <span class="badge bg-danger">Đăng xuất</span>
+                                            {% else %}
+                                                <span class="badge bg-dark">{{ activity.activity_type }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><small class="text-truncate d-inline-block" style="max-width: 300px;">{{ activity.description|default:"-" }}</small></td>
+                                        <td><small class="text-muted">{{ activity.ip_address|default:"-" }}</small></td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Chưa có hoạt động nào</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Dữ liệu biểu đồ đặt sân
+    const bookingData = {{ booking_chart_data|safe }};
+    const bookingLabels = bookingData.map(item => item.date);
+    const bookingValues = bookingData.map(item => item.count);
+    
+    new Chart(document.getElementById('bookingChart'), {
+        type: 'bar',
+        data: {
+            labels: bookingLabels,
+            datasets: [{
+                label: 'Số đặt sân',
+                data: bookingValues,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+    
+    // Dữ liệu biểu đồ đăng ký
+    const registerData = {{ register_chart_data|safe }};
+    const registerLabels = registerData.map(item => item.date);
+    const registerValues = registerData.map(item => item.count);
+    
+    new Chart(document.getElementById('registerChart'), {
+        type: 'line',
+        data: {
+            labels: registerLabels,
+            datasets: [{
+                label: 'Đăng ký mới',
+                data: registerValues,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+    
+    // Dữ liệu thiết bị
+    const deviceData = {{ analytics_data.device_stats|safe }};
+    const deviceLabels = deviceData.map(item => item.device_type || 'Unknown');
+    const deviceValues = deviceData.map(item => item.count);
+    
+    new Chart(document.getElementById('deviceChart'), {
+        type: 'doughnut',
+        data: {
+            labels: deviceLabels,
+            datasets: [{
+                data: deviceValues,
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Dữ liệu trình duyệt  
+    const browserData = {{ analytics_data.browser_stats|safe }};
+    const browserLabels = browserData.map(item => item.browser || 'Unknown');
+    const browserValues = browserData.map(item => item.count);
+    
+    new Chart(document.getElementById('browserChart'), {
+        type: 'pie',
+        data: {
+            labels: browserLabels,
+            datasets: [{
+                data: browserValues,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
