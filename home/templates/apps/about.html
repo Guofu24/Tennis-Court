@@ -31,7 +31,7 @@
                 <h1 class="mb-4">#1 Place To Find The Perfect Court: {{ top_court.name }}</h1>
                 <p class="mb-4">{{ top_court.description }}</p>
                 <p><i class="fa fa-check text-primary me-3"></i>Address: {{ top_court.court_address }}</p>
-                <p><i class="fa fa-check text-primary me-3"></i>Price: ${{ top_court.price }}</p>
+                <p><i class="fa fa-check text-primary me-3"></i>Price: {% if top_court.price == 0 %}Free{% else %}${{ top_court.price }}{% endif %}</p>
                 <p><i class="fa fa-check text-primary me-3"></i>Limit: {{ top_court.limit }} people</p>
                 <p><i class="fa fa-check text-primary me-3"></i>Number of Votes: {{ top_court.vote_count }}</p>
                 <a class="btn btn-primary py-3 px-5 mt-3" href="{% url 'detail' %}?id={{ top_court.id }}">View Details</a>

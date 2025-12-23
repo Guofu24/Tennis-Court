@@ -222,3 +222,36 @@ class OnlineUsersMiddleware(MiddlewareMixin):
                 request.user.save(update_fields=['last_login'])
         
         return None
+
+
+class MediaFileMiddleware(MiddlewareMixin):
+    """
+    Middleware để serve media files một cách đáng tin cậy qua ngrok/proxy
+    """
+    
+    def process_request(self, request):
+        import os
+        from django.conf import settings
+        from django.http import FileResponse, Http404
+        import mimetypes
+        
+        # Chỉ xử lý các request đến /media/
+        if request.path.startswith('/media/'):
+            # Lấy đường dẫn file tương đối
+            relative_path = request.path[7:]  # Bỏ '/media/'
+            file_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+            
+            # Kiểm tra file có tồn tại không
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                # Xác định content type
+                content_type, _ = mimetypes.guess_type(file_path)
+                if content_type is None:
+                    content_type = 'application/octet-stream'
+                
+                # Trả về file với headers phù hợp
+                response = FileResponse(open(file_path, 'rb'), content_type=content_type)
+                response['Access-Control-Allow-Origin'] = '*'
+                response['Cache-Control'] = 'public, max-age=86400'  # Cache 1 ngày
+                return response
+        
+        return None

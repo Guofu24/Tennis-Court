@@ -9,7 +9,7 @@
                 <li><strong>Tennis Court:</strong> {{ court.name }}</li>
                 <li><strong>Address:</strong> {{ court.court_address }}</li>
                 <li><strong>Play Time:</strong> {{ play_time }}</li>
-                <li><strong>Price:</strong> ${{ court.price }}</li>
+                <li><strong>Price:</strong> {% if court.price == 0 %}Free{% else %}${{ court.price }}{% endif %}</li>
             </ul>
             <p class="mt-4">We look forward to seeing you!</p>
             <p>Best regards,</p>

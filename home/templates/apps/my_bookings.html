@@ -19,7 +19,7 @@
             <div class="card-body d-flex flex-column">
               <h5 class="card-title">{{ booking.tennis_court.name }}</h5>
               <p class="card-text text-muted small">
-                <strong>Price:</strong> ${{ booking.tennis_court.price }} <br>
+                <strong>Price:</strong> {% if booking.tennis_court.price == 0 %}Free{% else %}${{ booking.tennis_court.price }}{% endif %} <br>
                 <strong>Limit:</strong> {{ booking.tennis_court.limit }} people <br>
                 <strong>Address:</strong> {{ booking.tennis_court.court_address }} <br>
               </p>

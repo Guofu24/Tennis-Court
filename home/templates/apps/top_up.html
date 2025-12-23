@@ -179,6 +179,13 @@
                                 </div>
                             </div>
                             <input type="hidden" name="payment_type" id="paymentType" value="">
+                            
+                            <!-- Submit button when no payment method selected -->
+                            <div id="noPaymentSubmit" class="mt-4">
+                                <button type="submit" class="btn btn-topup btn-lg w-100" id="submitBtnNoPayment">
+                                    <i class="fas fa-paper-plane me-2"></i>Top Up Now
+                                </button>
+                            </div>
                         </div>
                         
                         <!-- Bank Selection -->
@@ -209,15 +216,20 @@
                                     <label class="form-label">Expiry Date <span class="text-danger">*</span></label>
                                     <input type="text" name="card_expiry" class="form-control form-control-topup" 
                                            placeholder="MM/YY" maxlength="5"
-                                           oninput="formatExpiry(this)" id="cardExpiry"
+                                           id="cardExpiry"
                                            value="{{ form_data.card_expiry|default:'' }}">
                                     <div class="validation-hint">Format: MM/YY</div>
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label">CVV <span class="text-danger">*</span></label>
-                                    <input type="password" name="card_cvv" class="form-control form-control-topup" 
-                                           placeholder="***" maxlength="4" id="cardCvv"
-                                           value="{{ form_data.card_cvv|default:'' }}">
+                                    <div class="input-group">
+                                        <input type="password" name="card_cvv" class="form-control form-control-topup" 
+                                               placeholder="***" maxlength="4" id="cardCvv"
+                                               value="{{ form_data.card_cvv|default:'' }}">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('cardCvv', 'cvvEyeIcon')">
+                                            <i class="fas fa-eye" id="cvvEyeIcon"></i>
+                                        </button>
+                                    </div>
                                     <div class="validation-hint">3-4 digits on back of card</div>
                                 </div>
                             </div>
@@ -276,8 +288,13 @@
                             
                             <div class="mb-4">
                                 <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                                <input type="password" name="password" class="form-control form-control-topup" 
-                                       placeholder="Enter your password" id="password">
+                                <div class="input-group">
+                                    <input type="password" name="password" class="form-control form-control-topup" 
+                                           placeholder="Enter your password" id="password">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password', 'passwordEyeIcon')">
+                                        <i class="fas fa-eye" id="passwordEyeIcon"></i>
+                                    </button>
+                                </div>
                                 <div class="validation-hint">Minimum 6 characters</div>
                             </div>
                             
@@ -384,6 +401,9 @@ function selectPaymentType(type) {
     selectedPaymentType = type;
     document.getElementById('paymentType').value = type;
     
+    // Hide the no-payment submit button
+    document.getElementById('noPaymentSubmit').style.display = 'none';
+    
     // Update button styles
     document.getElementById('bankTypeBtn').classList.remove('active');
     document.getElementById('walletTypeBtn').classList.remove('active');
@@ -468,8 +488,52 @@ function sendOTP() {
     alert('OTP sent to ' + phoneNumber + '!\n\nFor testing, use: 123456');
 }
 
-// Form validation before submit
+// Toggle password visibility
+function togglePassword(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Show toast notification for errors
+function showErrorToast(message) {
+    // Remove existing toasts
+    const existingToasts = document.querySelectorAll('.topup-toast');
+    existingToasts.forEach(t => t.remove());
+    
+    const toast = document.createElement('div');
+    toast.className = 'topup-toast alert alert-danger position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px; animation: slideIn 0.3s ease;';
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
+}
+
+// Form validation and AJAX submit
 document.getElementById('topupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
     let errors = [];
     
     if (!selectedPaymentType) {
@@ -490,10 +554,52 @@ document.getElementById('topupForm').addEventListener('submit', function(e) {
     }
     
     if (errors.length > 0) {
-        e.preventDefault();
-        alert(errors.join('\n'));
+        showErrorToast(errors.join('<br>'));
+        return;
     }
+    
+    // Disable submit button
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    
+    // Send AJAX request
+    const formData = new FormData(this);
+    
+    fetch('{% url "top_up" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page on success to show success message
+            window.location.reload();
+        } else {
+            // Show error toast without reload
+            showErrorToast(data.errors.join('<br>'));
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorToast('Có lỗi xảy ra. Vui lòng thử lại.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
 });
 </script>
+
+<style>
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+</style>
 
 {% endblock %}

@@ -98,64 +98,98 @@
                     <h2 style="color:white;">Add new tennis court</h2>
                 </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                    <form id="addTennisForm" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="form-row">
                             <div class="form-column">
                                 <div class="mb-3">
                                     {{ form.name.label_tag }}
-                                    <input type="text" class="form-control" name="{{ form.name.name }}" placeholder="Enter name..." required>
+                                    <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                           name="{{ form.name.name }}" placeholder="Enter name..." 
+                                           value="{{ form.name.value|default:'' }}" required>
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.price.label_tag }}
-                                    <input type="number" class="form-control" name="{{ form.price.name }}" placeholder="Enter price..." step="0.01" required>
+                                    <input type="number" class="form-control {% if form.price.errors %}is-invalid{% endif %}" 
+                                           name="{{ form.price.name }}" placeholder="Enter price..." step="0.01" 
+                                           value="{{ form.price.value|default:'' }}" required>
+                                    {% if form.price.errors %}
+                                        <div class="invalid-feedback">{{ form.price.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.limit.label_tag }}
-                                    <input type="number" class="form-control" name="{{ form.limit.name }}" placeholder="Limit the number of people..." required>
+                                    <input type="number" class="form-control {% if form.limit.errors %}is-invalid{% endif %}" 
+                                           name="{{ form.limit.name }}" placeholder="Limit the number of people..." 
+                                           value="{{ form.limit.value|default:'' }}" required>
+                                    {% if form.limit.errors %}
+                                        <div class="invalid-feedback">{{ form.limit.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.dateTime.label_tag }}
-                                    <input type="date" class="form-control" name="{{ form.dateTime.name }}" required>
+                                    <input type="date" class="form-control {% if form.dateTime.errors %}is-invalid{% endif %}" 
+                                           name="{{ form.dateTime.name }}" value="{{ form.dateTime.value|default:'' }}" required>
+                                    {% if form.dateTime.errors %}
+                                        <div class="invalid-feedback">{{ form.dateTime.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
-
-                                <!-- <div class="mb-3">
-                                    {{ form.playTime.label_tag }}
-                                    <select class="form-control" name="{{ form.playTime.name }}">
-                                        {% for time in form.playTime.field.choices %}
-                                            <option value="{{ time.0 }}" {% if time.0 == form.playTime.value %}selected{% endif %}>
-                                                {{ time.1 }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </div> -->
                                 <div class="mb-3 brief-column">
                                     {{ form.brief.label_tag }}
-                                    <textarea class="form-control" name="{{ form.brief.name }}" placeholder="Description"></textarea>
+                                    <textarea class="form-control {% if form.brief.errors %}is-invalid{% endif %}" 
+                                              name="{{ form.brief.name }}" placeholder="Description">{{ form.brief.value|default:'' }}</textarea>
+                                    {% if form.brief.errors %}
+                                        <div class="invalid-feedback">{{ form.brief.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="form-column">
                                 <div class="mb-3">
                                     {{ form.court_address.label_tag }}
-                                    <input type="text" class="form-control" name="{{ form.court_address.name }}" placeholder="Enter tennis court address..." required>
+                                    <input type="text" class="form-control {% if form.court_address.errors %}is-invalid{% endif %}" 
+                                           name="{{ form.court_address.name }}" placeholder="Enter tennis court address..." 
+                                           value="{{ form.court_address.value|default:'' }}" required>
+                                    {% if form.court_address.errors %}
+                                        <div class="invalid-feedback">{{ form.court_address.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.squared.label_tag }}
-                                    <input type="number" class="form-control" name="{{ form.squared.name }}" placeholder="Enter area (sqft)..." step="0.01" required>
+                                    <input type="number" class="form-control {% if form.squared.errors %}is-invalid{% endif %}" 
+                                           name="{{ form.squared.name }}" placeholder="Enter area (sqft)..." step="0.01" 
+                                           value="{{ form.squared.value|default:'' }}" required>
+                                    {% if form.squared.errors %}
+                                        <div class="invalid-feedback">{{ form.squared.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.hours.label_tag }}
-                                    <input type="number" class="form-control" name="{{ form.hours.name }}" placeholder="Enter playing time..." required>
+                                    <input type="number" class="form-control {% if form.hours.errors %}is-invalid{% endif %}" 
+                                           name="{{ form.hours.name }}" placeholder="Enter playing time (hours)..." 
+                                           value="{{ form.hours.value|default:'' }}" required min="1" max="24">
+                                    {% if form.hours.errors %}
+                                        <div class="invalid-feedback">{{ form.hours.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.image.label_tag }}
-                                    <input type="file" class="form-control" name="{{ form.image.name }}" accept="image/*" onchange="previewImage(event)">
+                                    <input type="file" class="form-control {% if form.image.errors %}is-invalid{% endif %}" 
+                                           name="{{ form.image.name }}" onchange="previewImage(event)">
+                                    <small class="text-muted">Định dạng cho phép: JPG, JPEG, PNG, GIF, WEBP. Kích thước tối đa: 5MB</small>
                                     <img id="imagePreview" class="image-preview" src="" alt="Image Preview">
+                                    {% if form.image.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.image.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
-
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary py-3 px-5">Add</button>
+                        <div class="d-flex gap-3">
+                            <a href="{% url 'property_list' %}" class="btn btn-outline-secondary py-3 px-5">Cancel</a>
+                            <button type="submit" class="btn btn-primary py-3 px-5">Add Tennis Court</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -165,14 +199,85 @@
 
 <script>
     function previewImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const output = document.getElementById('imagePreview');
-            output.src = reader.result;
-            output.style.display = 'block';
-        };
-        reader.readAsDataURL(event.target.files[0]);
+        if (event.target.files && event.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const output = document.getElementById('imagePreview');
+                output.src = reader.result;
+                output.style.display = 'block';
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
     }
+    
+    // AJAX form submission
+    document.getElementById('addTennisForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        var form = this;
+        var formData = new FormData(form);
+        var submitBtn = form.querySelector('button[type="submit"]');
+        var originalText = submitBtn.innerHTML;
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        
+        // Clear previous error highlights
+        var invalidElements = document.querySelectorAll('.is-invalid');
+        for (var i = 0; i < invalidElements.length; i++) {
+            invalidElements[i].classList.remove('is-invalid');
+        }
+        
+        fetch('{% url "add_tennis" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) {
+            console.log('Response status:', response.status);
+            return response.text();  // Get as text first
+        })
+        .then(function(text) {
+            console.log('Response text:', text);
+            try {
+                var data = JSON.parse(text);
+                console.log('Parsed data:', data);
+                
+                if (data.success === true) {
+                    // Use showToast from master.html: showToast(type, title, message)
+                    showToast('success', 'Success!', 'Tennis court added successfully!');
+                    setTimeout(function() {
+                        window.location.href = data.redirect || '/hire/';
+                    }, 1000);
+                } else if (data.errors && data.errors.length > 0) {
+                    for (var i = 0; i < data.errors.length; i++) {
+                        // Use showToast from master.html: showToast(type, title, message)
+                        showToast('error', 'Error!', data.errors[i]);
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                } else {
+                    showToast('error', 'Error!', 'An error occurred. Please check your input.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            } catch (e) {
+                console.log('JSON parse error:', e);
+                showToast('error', 'Error!', 'Server error. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        })
+        .catch(function(error) {
+            console.log('Fetch error:', error);
+            showToast('error', 'Error!', 'Network error. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    });
 </script>
 
 {% endblock add %}

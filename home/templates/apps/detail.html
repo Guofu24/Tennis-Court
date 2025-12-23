@@ -28,7 +28,7 @@
                     <div class="mt-2 pr-3 content">
                         <p>{{ court.brief }}</p>
                     </div>
-                    <h4>Price: ${{ court.price }}</h4>
+                    <h4>Price: {% if court.price == 0 %}Free{% else %}${{ court.price }}{% endif %}</h4>
                     <p><strong>Squared:</strong> {{ court.squared }} m²</p>
                     <p><strong>Limit:</strong> {{ court.limit }} players</p>
                     <p><strong>Court Address:</strong> {{ court.court_address }}</p>
@@ -56,9 +56,22 @@
                             <label for="date">Select Date</label>
                             <input type="date" class="form-control" name="date" required>
                         </div> -->
-                        <button type="submit" class="btn btn-primary">Rent</button>
+                        <button type="submit" class="btn btn-primary" onclick="return confirmBooking()">Rent</button>
                     </form>
 
+<script>
+function confirmBooking() {
+    var playTime = document.getElementById('playTime').value;
+    if (!playTime) {
+        alert('Please select a play time first.');
+        return false;
+    }
+    var courtName = '{{ court.name }}';
+    var price = '{{ court.price }}';
+    var priceText = price == '0' || price == '0.0' ? 'FREE' : '$' + price;
+    return confirm('Confirm Booking\n\nCourt: ' + courtName + '\nTime: ' + playTime + '\nPrice: ' + priceText + '\n\nDo you want to proceed?');
+}
+</script>
 
                     {% if is_admin %}
                     <div class="buttons d-flex flex-row mt-3 gap-3">

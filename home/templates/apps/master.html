@@ -455,35 +455,47 @@
     <script src="{% static 'app/css/owlcarousel/owl.carousel.min.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let itemsToShow = 6;
+        // Only run if elements exist on the page
         let courtItems = document.querySelectorAll('.tennis-court-item');
+        let loadMoreBtn = document.getElementById('load-more');
+        let loadLessBtn = document.getElementById('load-less');
+        
+        if (courtItems.length > 0 && loadMoreBtn && loadLessBtn) {
+            let itemsToShow = 6;
 
-        function showItems() {
-            courtItems.forEach((item, index) => {
-                item.style.display = (index < itemsToShow) ? 'block' : 'none';
+            function showItems() {
+                courtItems.forEach((item, index) => {
+                    item.style.display = (index < itemsToShow) ? 'block' : 'none';
+                });
+
+                loadLessBtn.style.display = itemsToShow > 6 ? 'inline-block' : 'none';
+                loadMoreBtn.style.display = itemsToShow >= courtItems.length ? 'none' : 'inline-block';
+            }
+            showItems();
+            
+            loadMoreBtn.addEventListener('click', function() {
+                itemsToShow += 6;
+                showItems();
             });
 
-            document.getElementById('load-less').style.display = itemsToShow > 6 ? 'inline-block' : 'none';
-
-            document.getElementById('load-more').style.display = itemsToShow >= courtItems.length ? 'none' : 'inline-block';
+            loadLessBtn.addEventListener('click', function() {
+                itemsToShow = Math.max(6, itemsToShow - 6);
+                showItems();
+            });
         }
-        showItems();
-        document.getElementById('load-more').addEventListener('click', function() {
-            itemsToShow += 6;
-            showItems();
-        });
-
-        document.getElementById('load-less').addEventListener('click', function() {
-            itemsToShow = Math.max(6, itemsToShow - 6);
-            showItems();
-        });
 
         function showEditForm(courtId) {
-            document.getElementById("editFormContainer").style.display = "block";
+            var editFormContainer = document.getElementById("editFormContainer");
+            if (editFormContainer) {
+                editFormContainer.style.display = "block";
+            }
         }
 
         function closeEditForm() {
-            document.getElementById("editFormContainer").style.display = "none";
+            var editFormContainer = document.getElementById("editFormContainer");
+            if (editFormContainer) {
+                editFormContainer.style.display = "none";
+            }
         }
     </script>
 

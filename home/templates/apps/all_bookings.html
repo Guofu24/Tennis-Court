@@ -18,7 +18,7 @@
                          class="card-img-top" 
                          style="height: 220px; object-fit: cover;">
                     <div class="position-absolute top-0 end-0 p-2">
-                        <span class="badge bg-success shadow-sm fs-6 px-3 py-2">${{ booking.tennis_court.price }}</span>
+                        <span class="badge bg-success shadow-sm fs-6 px-3 py-2">{% if booking.tennis_court.price == 0 %}Free{% else %}${{ booking.tennis_court.price }}{% endif %}</span>
                     </div>
                 </div>
 

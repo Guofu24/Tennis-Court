@@ -91,6 +91,51 @@ def validate_email_format(value):
     return value
 
 
+def validate_image_file(value):
+    """Validate image file - only allow image formats and limit file size"""
+    if value:
+        import os
+        # Allowed image extensions
+        ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+        # Max file size: 5MB
+        MAX_FILE_SIZE = 5 * 1024 * 1024
+        
+        # Get file extension
+        ext = os.path.splitext(value.name)[1].lower()
+        
+        # Check extension
+        if ext not in ALLOWED_EXTENSIONS:
+            raise ValidationError(
+                f'Only image files are allowed ({", ".join(ALLOWED_EXTENSIONS)}). '
+                f'Your file format: {ext}'
+            )
+        
+        # Check file size
+        if hasattr(value, 'size') and value.size > MAX_FILE_SIZE:
+            size_mb = value.size / (1024 * 1024)
+            raise ValidationError(
+                f'File size must not exceed 5MB. '
+                f'Your file size: {size_mb:.2f}MB'
+            )
+        
+        # Check if file is actually an image by reading its content type
+        # More flexible check - allow any image/* content type
+        if hasattr(value, 'content_type') and value.content_type:
+            if not value.content_type.startswith('image/'):
+                # Also check for common variations and octet-stream (browser fallback)
+                ALLOWED_CONTENT_TYPES = [
+                    'image/jpeg', 'image/png', 'image/gif', 
+                    'image/bmp', 'image/webp', 'image/jpg',
+                    'application/octet-stream'  # Some browsers send this as fallback
+                ]
+                if value.content_type not in ALLOWED_CONTENT_TYPES:
+                    raise ValidationError(
+                        f'File is not a valid image. '
+                        f'Content type: {value.content_type}'
+                    )
+    return value
+
+
 class PasswordResetRequestForm(forms.Form):
     username = forms.CharField(
         max_length=150, 
@@ -217,6 +262,13 @@ class UserRegistrationForm(UserCreationForm):
         if CustomUser.objects.filter(userID=value).exists():
             raise ValidationError('CCCD/CMND đã được sử dụng.')
         return value
+    
+    def clean_photo(self):
+        """Validate photo file - only allow images"""
+        value = self.cleaned_data.get('photo')
+        if value:
+            validate_image_file(value)
+        return value
         
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -300,6 +352,13 @@ class AdminRegistrationForm(UserCreationForm):
         if CustomUser.objects.filter(email=value).exists():
             raise ValidationError('Email đã được sử dụng.')
         return value
+    
+    def clean_photo(self):
+        """Validate photo file - only allow images"""
+        value = self.cleaned_data.get('photo')
+        if value:
+            validate_image_file(value)
+        return value
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -312,6 +371,18 @@ class TennisForm(forms.ModelForm):
     class Meta:
         model = Tennis
         fields = ['name', 'price', 'court_address', 'squared', 'limit', 'brief', 'hours', 'image', 'playTime', 'dateTime']
+        labels = {
+            'name': 'Court Name',
+            'price': 'Price ($)',
+            'court_address': 'Court Address',
+            'squared': 'Area (sqft)',
+            'limit': 'Player Limit',
+            'brief': 'Description',
+            'hours': 'Playing Hours',
+            'image': 'Court Image',
+            'playTime': 'Play Time',
+            'dateTime': 'Available Date',
+        }
         widgets = {
             'dateTime': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
@@ -319,6 +390,10 @@ class TennisForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Make playTime optional since it's auto-generated
+        self.fields['playTime'].required = False
+        # Image is required
+        self.fields['image'].required = True
         if self.instance.hours:
             play_times = self.instance.generate_play_times()
             self.fields['playTime'].choices = [(time, time) for time in play_times]
@@ -334,11 +409,16 @@ class TennisForm(forms.ModelForm):
     
     def clean_price(self):
         value = self.cleaned_data.get('price')
-        if value is not None:
-            if value < 0:
-                raise ValidationError('Giá không được âm.')
-            if value > 10000:
-                raise ValidationError('Giá không được quá $10,000.')
+        if value is None:
+            raise ValidationError('Giá là bắt buộc và phải là số.')
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            raise ValidationError('Giá phải là số.')
+        if value < 0:
+            raise ValidationError('Giá không được âm.')
+        if value > 10000:
+            raise ValidationError('Giá không được quá $10,000.')
         return value
     
     def clean_court_address(self):
@@ -350,27 +430,67 @@ class TennisForm(forms.ModelForm):
     
     def clean_squared(self):
         value = self.cleaned_data.get('squared')
-        if value is not None:
-            if value <= 0:
-                raise ValidationError('Diện tích phải lớn hơn 0.')
+        if value is None:
+            raise ValidationError('Diện tích là bắt buộc và phải là số.')
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            raise ValidationError('Diện tích phải là số.')
+        if value <= 0:
+            raise ValidationError('Diện tích phải lớn hơn 0.')
         return value
     
     def clean_limit(self):
         value = self.cleaned_data.get('limit')
-        if value is not None:
-            if value < 2:
-                raise ValidationError('Giới hạn người chơi phải ít nhất 2.')
-            if value > 20:
-                raise ValidationError('Giới hạn người chơi không được quá 20.')
+        if value is None:
+            raise ValidationError('Giới hạn người chơi là bắt buộc và phải là số nguyên.')
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            raise ValidationError('Giới hạn người chơi phải là số nguyên.')
+        if value < 2:
+            raise ValidationError('Giới hạn người chơi phải ít nhất 2.')
+        if value > 20:
+            raise ValidationError('Giới hạn người chơi không được quá 20.')
         return value
     
     def clean_hours(self):
         value = self.cleaned_data.get('hours')
-        if value is not None:
-            if value < 1:
-                raise ValidationError('Số giờ phải ít nhất 1.')
-            if value > 24:
-                raise ValidationError('Số giờ không được quá 24.')
+        if value is None:
+            raise ValidationError('Số giờ chơi là bắt buộc và phải là số nguyên.')
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            raise ValidationError('Số giờ phải là số nguyên.')
+        if value < 1:
+            raise ValidationError('Số giờ phải ít nhất 1.')
+        if value > 24:
+            raise ValidationError('Số giờ không được quá 24.')
+        return value
+    
+    def clean_image(self):
+        """Validate image file - only allow images"""
+        value = self.cleaned_data.get('image')
+        if not value:
+            raise ValidationError('Please upload at least one image for the court.')
+        validate_image_file(value)
+        return value
+    
+    def clean_dateTime(self):
+        """Validate available date - must be today or in the future"""
+        value = self.cleaned_data.get('dateTime')
+        if value:
+            from datetime import date
+            if value < date.today():
+                raise ValidationError('Ngày khả dụng phải từ hôm nay trở đi.')
+        return value
+    
+    def clean_brief(self):
+        """Validate description length"""
+        value = self.cleaned_data.get('brief')
+        if value:
+            if len(value) > 10000:
+                raise ValidationError('Mô tả không được quá 10,000 ký tự.')
         return value
 
 class ReviewForm(forms.ModelForm):

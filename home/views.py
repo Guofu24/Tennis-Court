@@ -192,12 +192,80 @@ def add_tennis(request):
         messages.error(request, 'Bạn không có quyền truy cập vào trang này.')
         return HttpResponseForbidden("Bạn không có quyền truy cập vào trang này.")
 
+    # Check if AJAX request
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     if request.method == 'POST':
-        form = TennisForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Sân tennis mới đã được thêm thành công!')
-            return redirect('property_list')
+        try:
+            # Check if image is provided
+            has_image = 'image' in request.FILES and request.FILES['image']
+            
+            # Debug: Log file info
+            print("=" * 50)
+            print("ADD TENNIS - DEBUG INFO")
+            print(f"FILES: {request.FILES}")
+            print(f"is_ajax: {is_ajax}")
+            if has_image:
+                img = request.FILES['image']
+                print(f"Image name: {img.name}")
+                print(f"Image size: {img.size}")
+                print(f"Image content_type: {img.content_type}")
+            else:
+                print("Note: No image uploaded")
+            print("=" * 50)
+            
+            form = TennisForm(request.POST, request.FILES)
+            if form.is_valid():
+                court = form.save()
+                if is_ajax:
+                    return JsonResponse({'success': True, 'redirect': '/hire/'})
+                messages.success(request, f'Sân tennis "{court.name}" đã được thêm thành công!')
+                return redirect('property_list')
+            else:
+                # Collect validation errors
+                errors = []
+                print(f"Form errors: {form.errors}")
+                
+                # Field label mapping for better error messages
+                field_labels = {
+                    'name': 'Court Name',
+                    'price': 'Price',
+                    'court_address': 'Court Address',
+                    'squared': 'Area',
+                    'limit': 'Player Limit',
+                    'brief': 'Description',
+                    'hours': 'Playing Hours',
+                    'image': 'Court Image',
+                    'playTime': 'Play Time',
+                    'dateTime': 'Available Date',
+                }
+                
+                for field, field_errors in form.errors.items():
+                    for error in field_errors:
+                        error_str = str(error)  # Ensure it's a string
+                        if field == '__all__':
+                            errors.append(error_str)
+                        else:
+                            # Get label from mapping or form fields or use field name
+                            field_label = field_labels.get(field)
+                            if not field_label and field in form.fields and hasattr(form.fields[field], 'label'):
+                                field_label = form.fields[field].label
+                            if not field_label:
+                                field_label = field.replace('_', ' ').title()
+                            errors.append(f'{field_label}: {error_str}')
+                
+                print(f"Collected errors: {errors}")  # Debug
+                
+                if is_ajax:
+                    return JsonResponse({'success': False, 'errors': errors})
+                
+                for error in errors:
+                    messages.error(request, error)
+        except Exception as e:
+            print(f"Exception in add_tennis: {e}")
+            if is_ajax:
+                return JsonResponse({'success': False, 'errors': [str(e)]})
+            messages.error(request, str(e))
     else:
         form = TennisForm()
     return render(request, 'apps/add_tennis.html', {'form': form})
@@ -366,6 +434,36 @@ def checkout(request):
     play_time = temp_booking['play_time']
     court_price = court.price
     user_balance = request.user.balance
+    
+    # Nếu sân FREE, bỏ qua bước thanh toán và tạo booking trực tiếp
+    if court_price == 0:
+        booking = Booking.objects.create(
+            tennis_court=court,
+            user=request.user,
+            play_time=play_time
+        )
+
+        invoice = Invoice.objects.create(
+            user=request.user,
+            booking=booking,
+            amount=0,
+            status='Paid',
+            payment_method='free',
+            card_last_four=None,
+            transaction_id=None
+        )
+        
+        # Ghi lại hoạt động đặt sân miễn phí
+        log_activity(request, 'booking', f'Đặt sân miễn phí {court.name} lúc {play_time}', {
+            'court_id': court.id,
+            'court_name': court.name,
+            'play_time': play_time,
+            'amount': 0
+        })
+        
+        del request.session['temp_booking']
+        messages.success(request, f"Successfully booked {court.name} for FREE!")
+        return redirect('booking_success')
     
     # Các phương thức thanh toán có sẵn
     payment_methods = [
@@ -565,18 +663,18 @@ def top_up(request):
         
         # Validate payment type
         if not payment_type:
-            errors.append("Vui lòng chọn phương thức thanh toán.")
+            errors.append("Please select a payment method.")
         elif payment_type == 'bank':
             if not bank_id:
-                errors.append("Vui lòng chọn ngân hàng.")
+                errors.append("Please select a bank.")
             
             # Validate card number (13-19 digits)
             if not card_number:
-                errors.append("Vui lòng nhập số thẻ.")
+                errors.append("Please enter card number.")
             elif not card_number.isdigit():
-                errors.append("Số thẻ chỉ được chứa chữ số.")
+                errors.append("Card number can only contain digits.")
             elif len(card_number) < 13 or len(card_number) > 19:
-                errors.append("Số thẻ phải có từ 13-19 chữ số.")
+                errors.append("Card number must be 13-19 digits.")
             else:
                 # Luhn algorithm validation (kiểm tra tính hợp lệ của số thẻ)
                 def luhn_check(card_num):
@@ -591,90 +689,90 @@ def top_up(request):
                     return checksum % 10 == 0
                 
                 if not luhn_check(card_number):
-                    errors.append("Số thẻ không hợp lệ (không đúng định dạng Luhn).")
+                    errors.append("Card number is invalid (Luhn check failed).")
             
             # Validate card expiry (MM/YY format)
             if not card_expiry:
-                errors.append("Vui lòng nhập ngày hết hạn thẻ.")
+                errors.append("Please enter card expiry date.")
             else:
                 import re
                 if not re.match(r'^\d{2}/\d{2}$', card_expiry):
-                    errors.append("Ngày hết hạn phải theo định dạng MM/YY.")
+                    errors.append("Expiry must be in MM/YY format.")
                 else:
                     month, year = card_expiry.split('/')
                     month = int(month)
                     year = int('20' + year)
                     if month < 1 or month > 12:
-                        errors.append("Tháng hết hạn không hợp lệ (1-12).")
+                        errors.append("Invalid month (1-12).")
                     else:
                         from datetime import datetime
                         current_date = datetime.now()
                         if year < current_date.year or (year == current_date.year and month < current_date.month):
-                            errors.append("Thẻ đã hết hạn.")
+                            errors.append("Card has expired.")
             
             # Validate CVV (3-4 digits)
             if not card_cvv:
-                errors.append("Vui lòng nhập mã CVV.")
+                errors.append("Please enter CVV.")
             elif not card_cvv.isdigit() or len(card_cvv) < 3 or len(card_cvv) > 4:
-                errors.append("Mã CVV phải có 3-4 chữ số.")
+                errors.append("CVV must be 3-4 digits.")
                 
         elif payment_type == 'wallet':
             if not wallet_id:
-                errors.append("Vui lòng chọn ví điện tử.")
+                errors.append("Please select an e-wallet.")
             
             # Validate phone number for wallet
             if not phone_number:
-                errors.append("Vui lòng nhập số điện thoại.")
+                errors.append("Please enter phone number.")
             else:
                 import re
                 # Validate Vietnamese phone number
                 phone_clean = re.sub(r'[\s\-\(\)]', '', phone_number)
                 if not re.match(r'^(0|\+84)(3|5|7|8|9)\d{8}$', phone_clean):
-                    errors.append("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam.")
+                    errors.append("Invalid phone number. Please enter a valid Vietnamese phone number.")
             
             # Validate OTP (6 digits)
             if not otp_code:
-                errors.append("Vui lòng nhập mã OTP.")
+                errors.append("Please enter OTP code.")
             elif not otp_code.isdigit() or len(otp_code) != 6:
-                errors.append("Mã OTP phải có đúng 6 chữ số.")
+                errors.append("OTP must be exactly 6 digits.")
         
         # Validate account name
         if not account_name:
-            errors.append("Vui lòng nhập tên chủ tài khoản.")
+            errors.append("Please enter account holder name.")
         elif len(account_name) < 2:
-            errors.append("Tên chủ tài khoản phải có ít nhất 2 ký tự.")
+            errors.append("Account name must be at least 2 characters.")
         elif len(account_name) > 100:
-            errors.append("Tên chủ tài khoản không được quá 100 ký tự.")
+            errors.append("Account name cannot exceed 100 characters.")
         else:
             import re
             # Only allow letters, spaces, and Vietnamese characters
             if not re.match(r'^[\u00C0-\u024F\u1E00-\u1EFFa-zA-Z\s]+$', account_name):
-                errors.append("Tên chủ tài khoản chỉ được chứa chữ cái và khoảng trắng.")
+                errors.append("Account name can only contain letters and spaces.")
         
         # Validate password
         if not password:
-            errors.append("Vui lòng nhập mật khẩu xác nhận.")
+            errors.append("Please enter confirmation password.")
         elif len(password) < 6:
-            errors.append("Mật khẩu phải có ít nhất 6 ký tự.")
+            errors.append("Password must be at least 6 characters.")
         
         # Validate amount
         top_up_amount = 0
         if not amount_str:
-            errors.append("Vui lòng nhập số tiền nạp.")
+            errors.append("Please enter top-up amount.")
         else:
             try:
                 top_up_amount = float(amount_str)
                 if top_up_amount <= 0:
-                    errors.append("Số tiền nạp phải lớn hơn 0.")
+                    errors.append("Top-up amount must be greater than 0.")
                 elif top_up_amount < 10:
-                    errors.append("Số tiền nạp tối thiểu là $10.")
+                    errors.append("Minimum top-up amount is $10.")
                 elif top_up_amount > 10000:
-                    errors.append("Số tiền nạp tối đa là $10,000 mỗi lần.")
+                    errors.append("Maximum top-up amount is $10,000 per transaction.")
                 elif not (top_up_amount * 100).is_integer():
                     # Only allow 2 decimal places
-                    errors.append("Số tiền chỉ được có tối đa 2 chữ số thập phân.")
+                    errors.append("Amount can only have up to 2 decimal places.")
             except (ValueError, TypeError):
-                errors.append("Số tiền không hợp lệ. Vui lòng nhập số.")
+                errors.append("Invalid amount. Please enter a number.")
         
         # Check daily limit
         from datetime import datetime, timedelta
@@ -686,9 +784,14 @@ def top_up(request):
         ).aggregate(total=Sum('amount'))['total'] or 0
         
         if today_deposits + top_up_amount > 50000:
-            errors.append(f"Đã vượt quá hạn mức nạp tiền trong ngày ($50,000). Đã nạp hôm nay: ${today_deposits}.")
+            errors.append(f"Daily limit exceeded ($50,000). Already deposited today: ${today_deposits}.")
+        
+        # Check if AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         
         if errors:
+            if is_ajax:
+                return JsonResponse({'success': False, 'errors': errors})
             for error in errors:
                 messages.error(request, error)
             return render(request, 'apps/top_up.html', {
@@ -726,7 +829,11 @@ def top_up(request):
         })
 
         messages.success(request, f"Nạp tiền thành công ${top_up_amount:.2f}! Mã giao dịch: {transaction_id}. Số dư hiện tại: ${request.user.balance:.2f}.")
-        return redirect('property_list')
+        
+        # Always redirect on success (will reload page)
+        if is_ajax:
+            return JsonResponse({'success': True, 'redirect': True})
+        return redirect('top_up')
 
     return render(request, 'apps/top_up.html', {
         'banks': banks,
@@ -891,7 +998,30 @@ def edit_profile(request):
             user.gender = gender if gender else None
                 
             if request.FILES.get('photo'):
-                user.photo = request.FILES['photo']
+                photo = request.FILES['photo']
+                
+                # Validate photo file
+                import os
+                ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+                ALLOWED_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/jpg']
+                MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+                
+                ext = os.path.splitext(photo.name)[1].lower()
+                
+                if ext not in ALLOWED_EXTENSIONS:
+                    messages.error(request, f'Chỉ cho phép tải lên file ảnh ({", ".join(ALLOWED_EXTENSIONS)}). File của bạn có định dạng: {ext}')
+                    return redirect('user_profile')
+                
+                if hasattr(photo, 'size') and photo.size > MAX_FILE_SIZE:
+                    size_mb = photo.size / (1024 * 1024)
+                    messages.error(request, f'Kích thước file không được vượt quá 5MB. File của bạn có kích thước: {size_mb:.2f}MB')
+                    return redirect('user_profile')
+                
+                if hasattr(photo, 'content_type') and photo.content_type not in ALLOWED_CONTENT_TYPES:
+                    messages.error(request, f'File không phải là ảnh hợp lệ. Content type: {photo.content_type}')
+                    return redirect('user_profile')
+                
+                user.photo = photo
             user.save()
             messages.success(request, 'Cập nhật thông tin thành công!')
             return redirect('user_profile')
